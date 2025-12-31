@@ -22,3 +22,12 @@ llava_onevision,HUGGINGFACE,llava-hf/llava-onevision-qwen2-7b-ov-hf,128_000,0,0
 llama32_90b,HUGGINGFACE,meta-llama/Llama-3.2-90B-Vision-Instruct,128_000,0,0
 llama4_scout,HUGGINGFACE,meta-llama/Llama-4-Scout-17B-16E-Instruct,10_000_000,0,0
 deepseek,DEEPSEEK,deepseek-chat,64_000,0.14,0.28
+deepseek_v3_1,OPENAI,deepseek-v3.1,64_000,0.14,0.28
+deepseek_v3_2,OPENAI,deepseek-v3.2,64_000,0.14,0.28
+qwen_turbo,OPENAI,qwen-turbo,128_000,0.005,0.02
+llama33_70b_free,OPENAI,meta-llama/llama-3.3-70b-instruct:free,128_000,0,0
+llama31_405b_free,OPENAI,meta-llama/llama-3.1-405b-instruct:free,128_000,0,0
+deepseek_r1_free,OPENAI,deepseek/deepseek-r1-0528:free,64_000,0,0
+gemini_25_flash,OPENAI,gemini-2.5-flash,1_000_000,1.5,6
+gemini_15_flash,OPENAI,gemini-1.5-flash,1_000_000,0.75,3
+deepseek_r1_llama_8b,OPENAI,deepseek-r1-distill-llama-8b,128_000,0,0

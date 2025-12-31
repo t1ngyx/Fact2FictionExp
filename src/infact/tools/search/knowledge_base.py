@@ -3,6 +3,7 @@ import os.path
 import pickle
 import zipfile
 from multiprocessing import Pool, Queue
+from threading import Thread
 from pathlib import Path
 from urllib.request import urlretrieve
 from datetime import datetime
@@ -248,15 +249,19 @@ class KnowledgeBase(LocalSearchAPI):
         print(f"Constructing kNNs for embeddings using {n_workers} workers...")
 
         # Initialize and run the KB building pipeline
-        self.resource_queue = Queue()
-        self.embedding_queue = Queue()
+        self.resource_queue = Queue(maxsize=20)
+        self.embedding_queue = Queue(maxsize=20)
         devices_queue = Queue()
 
         with Pool(n_workers, embed, (self.resource_queue, self.embedding_queue, devices_queue)):
             for d in range(n_workers):
                 devices_queue.put(d)
-            self._read()
+            
+            read_thread = Thread(target=self._read)
+            read_thread.start()
+            
             self._train_embedding_knn()
+            read_thread.join()
 
     def _read(self):
         print("Reading and preparing resource files...")
@@ -298,7 +303,7 @@ class KnowledgeBase(LocalSearchAPI):
 def get_contents(file_path) -> list[dict]:
     """Parse the contents of a file. Each line is a JSON encoded document."""
     searches = []
-    with open(file_path) as f:
+    with open(file_path, encoding='utf-8') as f: # changed encoding to utf-8
         for line in f:
             # Parse document
             doc = json.loads(line)

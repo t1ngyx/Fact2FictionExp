@@ -116,7 +116,8 @@ class Logger:
         # Create and add the new file handler
         log_to_file_handler = RotatingFileHandler(log_path,
                                                   maxBytes=10 * 1024 * 1024,
-                                                  backupCount=5)
+                                                  backupCount=5,
+                                                  encoding='utf-8')
         log_to_file_handler.setLevel(logging.DEBUG)
         formatter = RemoveStringFormattingFormatter()
         log_to_file_handler.setFormatter(formatter)
@@ -126,14 +127,14 @@ class Logger:
         hyperparams = {}
         for param in signature.parameters:
             hyperparams[param] = local_scope[param]
-        with open(self.config_path, "w") as f:
+        with open(self.config_path, "w", encoding='utf-8') as f:
             yaml.dump(hyperparams, f)
         if print_summary:
             print(bold("Configuration summary:"))
             print(yaml.dump(hyperparams, sort_keys=False, indent=4))
 
     def _init_predictions_csv(self):
-        with open(self.predictions_path, "w") as f:
+        with open(self.predictions_path, "w", encoding='utf-8', newline='') as f:
             csv.writer(f).writerow(("sample_index",
                                     "claim",
                                     "target",
@@ -169,7 +170,7 @@ class Logger:
                              gt_justification: Optional[str]):
         target_label_str = target.name if target is not None else None
         is_correct = target == predicted if target is not None else None
-        with open(self.predictions_path, "a") as f:
+        with open(self.predictions_path, "a", encoding='utf-8', newline='') as f:
             csv.writer(f).writerow((sample_index,
                                     claim,
                                     target_label_str,
@@ -179,19 +180,19 @@ class Logger:
                                     gt_justification))
 
     def save_fc_doc(self, doc: FCDocument, claim_id: int):
-        with open(self.fc_docs_dir / f"{claim_id}", "w") as f:
+        with open(self.fc_docs_dir / f"{claim_id}", "w", encoding='utf-8') as f:
             f.write(str(doc))
 
     def _init_averitec_out(self):
-        with open(self.averitec_out, "w") as f:
+        with open(self.averitec_out, "w", encoding='utf-8') as f:
             json.dump([], f, indent=4)
 
     def save_next_averitec_out(self, next_out: dict):
-        with open(self.averitec_out, "r") as f:
+        with open(self.averitec_out, "r", encoding='utf-8') as f:
             current_outs = json.load(f)
         current_outs.append(next_out)
         current_outs.sort(key=lambda x: x["claim_id"])  # Score computation requires sorted output
-        with open(self.averitec_out, "w") as f:
+        with open(self.averitec_out, "w", encoding='utf-8') as f:
             json.dump(current_outs, f, indent=4)
 
 

@@ -5,7 +5,7 @@ from pathlib import Path
 # Directories
 working_dir = Path.cwd().__str__()
  
-data_base_dir = "DATA_BASE_DIR"  # Where the datasets are stored
+data_base_dir = "data/"  # Where the datasets are stored
 result_base_dir = working_dir + "/out/"  # Where outputs are to be saved
 temp_dir = result_base_dir + "/temp/" # Where caches etc. are saved
  

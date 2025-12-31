@@ -1,6 +1,5 @@
 from abc import ABC
 from typing import Callable
-import time
 
 import numpy as np
 import openai
@@ -118,8 +117,6 @@ class Model(ABC):
         self.top_p = top_p
         self.repetition_penalty = repetition_penalty
         self.device = device
-        
-        self.guardrail_bypass_system_prompt = None
 
         self.api = self.load(specifier.split(":", 1)[1])
 
@@ -227,27 +224,19 @@ class GPTModel(Model):
 
     def _generate(self, prompt: Prompt, temperature: float, top_p: float, top_k: int,
                   system_prompt: Prompt = None) -> str:
-        max_retries = 10
-        retry_delay = 10  # Start with 10 seconds
-
-        for attempt in range(max_retries):
-            try:
-                return self.api(
-                    str(prompt),
-                    temperature=temperature,
-                    top_p=top_p,
-                )
-            except openai.RateLimitError as e:
-                self.logger.warning(f"OpenAI rate limit hit! Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
-                time.sleep(retry_delay)
-                retry_delay = min(retry_delay * 2, 60) # Exponential backoff capped at 60s
-            except Exception as e:
-                self.logger.warning("Error while calling the LLM! Continuing with empty response.\n" + str(e))
-                self.logger.warning("Prompt used:\n" + str(prompt))
-                return ""
-        
-        self.logger.critical("Max retries exceeded for OpenAI rate limit.")
-        quit()
+        try:
+            return self.api(
+                str(prompt),
+                temperature=temperature,
+                top_p=top_p,
+            )
+        except openai.RateLimitError as e:
+            self.logger.critical(f"OpenAI rate limit hit!")
+            self.logger.critical(repr(e))
+            quit()
+        except Exception as e:
+            self.logger.warning("Error while calling the LLM! Continuing with empty response.\n" + str(e))
+            self.logger.warning("Prompt used:\n" + str(prompt))
         return ""
     
     def count_tokens(self, prompt: Prompt | str) -> int:

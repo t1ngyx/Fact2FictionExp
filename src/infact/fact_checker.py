@@ -135,7 +135,11 @@ class FactChecker:
         label, meta = self.procedure.apply_to(doc)
 
         # Finalize the fact-check
-        doc.add_reasoning("## Final Judgement\n" + self.judge.get_latest_reasoning())
+        # changed to avoid overwriting existing reasoning
+        # doc.add_reasoning("## Final Judgement\n" + self.judge.get_latest_reasoning())
+        latest_reasoning = self.judge.get_latest_reasoning()
+        if latest_reasoning:
+            doc.add_reasoning("## Final Judgement\n" + latest_reasoning)
 
         # Summarize the fact-check and use the summary as justification
         if label == Label.REFUSED_TO_ANSWER:

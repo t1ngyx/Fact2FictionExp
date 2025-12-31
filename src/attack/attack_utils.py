@@ -10,13 +10,15 @@ import time
 from infact.tools.search.knowledge_base import KnowledgeBase
 
 import re
+import random
 
 # OpenAI API configuration
-GPT_URL = "https://api.openai.com/v1/"
-
 with open("config/api_keys.yaml", "r") as f:
     api_keys = yaml.load(f, Loader=yaml.FullLoader)
 GPT_API_KEY = api_keys["openai_api_key"]
+GPT_URL = api_keys.get("openai_api_base", "https://api.openai.com/v1")
+if not GPT_URL.endswith("/"):
+    GPT_URL += "/"
  
 headers = {
     "Authorization": f"Bearer {GPT_API_KEY}",
@@ -68,7 +70,7 @@ def get_report_from_cache(cache_dir: str, claim_id: int):
         str: Report content
     """
     report_path = os.path.join(cache_dir, f"{claim_id}")
-    with open(report_path, "r") as f:
+    with open(report_path, "r", encoding="utf-8") as f:
         report = f.read()
     return report
 
@@ -85,7 +87,7 @@ def get_log_from_cache(cache_dir: str, claim_id: int):
     """
     log_dir = cache_dir.replace("docs", "logs")
     report_path = os.path.join(log_dir, f"{claim_id}.txt")
-    with open(report_path, "r") as f:
+    with open(report_path, "r", encoding="utf-8") as f:
         logs = f.read()
     return logs
 
@@ -226,9 +228,9 @@ def parse_report(report: str):
     
     return temp_dict
    
-async def query_gpt_single(session: aiohttp.ClientSession, input: str, model_name: str="gpt-4o-mini", max_tokens: int=512, temperature: float=1):
+async def query_gpt_single(session: aiohttp.ClientSession, input: str, model_name: str="gpt-4o-mini", max_tokens: int=512, temperature: float=1, max_retries: int=5, base_delay: int=2):
     """
-    Make a single API call to GPT model.
+    Make a single API call to GPT model with robust retry logic.
     
     Args:
         session: aiohttp session for API calls
@@ -236,31 +238,49 @@ async def query_gpt_single(session: aiohttp.ClientSession, input: str, model_nam
         model_name: Model to use
         max_tokens: Maximum tokens to generate
         temperature: Sampling temperature
+        max_retries: Maximum number of retries
+        base_delay: Base delay for exponential backoff
         
     Returns:
         str: Generated response or None if failed
     """
-    try:
-        async with session.post(
-            url=f"{GPT_URL}chat/completions",
-            json={
-                "model": model_name,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "messages": [{"role": "user", "content": input}],
-            },
-            headers=headers
-        ) as response:
-            if response.status == 200:
-                result = await response.json()
-                content = result['choices'][0]['message']['content']
-                return content
-            else:
-                print(f"Request failed with status code: {response.status}")
-                return None
-    except Exception as e:
-        print(f"Request error: {e}")
-        return None
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {GPT_API_KEY}"
+    }
+    
+    for attempt in range(max_retries):
+        try:
+            async with session.post(
+                url=f"{GPT_URL}chat/completions",
+                json={
+                    "model": model_name,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                    "messages": [{"role": "user", "content": input}],
+                },
+                headers=headers
+            ) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    content = result['choices'][0]['message']['content']
+                    return content
+                elif response.status in [429, 500, 502, 503, 504]:
+                    # Retry on rate limits and server errors
+                    delay = base_delay * (2 ** attempt) + random.uniform(0, 1) # Exponential backoff with jitter
+                    print(f"Request failed with status {response.status}. Retrying in {delay:.2f}s (Attempt {attempt + 1}/{max_retries})")
+                    await asyncio.sleep(delay)
+                    continue
+                else:
+                    print(f"Request failed with status code: {response.status}. No retry.")
+                    return None
+        except Exception as e:
+            print(f"Request error: {e}. Retrying...")
+            await asyncio.sleep(base_delay)
+            continue
+            
+    print(f"Max retries ({max_retries}) exceeded for request.")
+    return None
 
 async def query_gpt_batch(input, max_limits: int, model_name: str="gemini-1.5-flash", max_tokens: int=512, temperature: float=1):
     """
