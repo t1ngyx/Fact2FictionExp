@@ -28,7 +28,7 @@ from infact.tools import initialize_tools
 from attack.attack_methods import create_naive_attack, create_poisoned_rag_attack, create_prompt_injection_attack, create_fact2fiction_attack
 from attack.attack_utils import get_report_from_cache, load_gt_data, parse_report, setup_process_logger, distribute_gpus, setup_experiment_dir, get_all_valid_claim_ids, KBManager, find_larger_cache
 from sklearn.neighbors import NearestNeighbors
-from config.globals import data_base_dir
+from config.globals import data_base_dir, working_dir
 import json
 from infact.common.logger import Logger
 from infact.utils.console import bold
@@ -144,7 +144,9 @@ def get_or_create_kb(variant: str, device: str, logger) -> KnowledgeBase:
     """
     logger.info(f"Getting or creating KB instance: variant={variant}, device={device}")
     temp_kb = _kb_manager.get_kb(variant, device, logger)
-    temp_kb._setup_embedding_model()
+    # Only setup embedding model if it hasn't been set up yet or if it was cleared
+    if not hasattr(temp_kb, 'embedding_model') or temp_kb.embedding_model is None:
+        temp_kb._setup_embedding_model()
     return temp_kb
 
 def reset_kb_cache():
@@ -195,7 +197,13 @@ def add_fake_evidence_to_kb(kb: KnowledgeBase, claim_id: int, fake_evidences: li
             original_embeddings = pickle.load(f)
         logger.info(f"Loaded original evidence embeddings cache from {embedding_cache_path}")
     else:
-        original_embeddings = kb._embed_many([resource["url2text"] for resource in resources if resource["url2text"] is not None])
+        # Filter out None and empty strings to avoid embedding errors
+        valid_texts = [resource["url2text"] for resource in resources if resource["url2text"] and resource["url2text"].strip()]
+        if valid_texts:
+            original_embeddings = kb._embed_many(valid_texts)
+        else:
+            original_embeddings = np.array([]) # Handle empty case
+            
         with open(embedding_cache_path, "wb") as f:
             pickle.dump(original_embeddings, f)
         logger.info(f"Saved original evidence embeddings cache to {embedding_cache_path}")
@@ -205,7 +213,11 @@ def add_fake_evidence_to_kb(kb: KnowledgeBase, claim_id: int, fake_evidences: li
     logger.info(f"After adding fake evidence: {len(all_resources)} items")
 
     # Generate embeddings for fake evidence
-    fake_embeddings = kb._embed_many([fake_evidence["url2text"] for fake_evidence in fake_evidences if fake_evidence["url2text"] is not None])
+    valid_fake_texts = [fake_evidence["url2text"] for fake_evidence in fake_evidences if fake_evidence["url2text"] and fake_evidence["url2text"].strip()]
+    if valid_fake_texts:
+        fake_embeddings = kb._embed_many(valid_fake_texts)
+    else:
+        fake_embeddings = np.array([])
     
     # Merge embeddings, maintaining the same order as all_resources
     embeddings = np.concatenate([original_embeddings, fake_embeddings], axis=0)
@@ -398,7 +410,7 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
 
 def attack_claim_wrapper(claim_id, poison_rate, attack_type, victim, variant, device, 
                         attack_set_dir, exp_dirs, attacker_model, fact_checker_model,
-                        out_file, lock, gpu_id=None):
+                        out_file, lock, dir_fact_checker_model=None, gpu_id=None):
     """Wrap attack function, handle result writing and exceptions"""
     # Set GPU for current process
     if gpu_id is not None:
@@ -422,7 +434,8 @@ def attack_claim_wrapper(claim_id, poison_rate, attack_type, victim, variant, de
             exp_dirs=exp_dirs, 
             logger=proc_logger,
             attacker_model=attacker_model,
-            fact_checker_model=fact_checker_model
+            fact_checker_model=fact_checker_model,
+            dir_fact_checker_model=dir_fact_checker_model
         )
         
         # Safely write results using lock
@@ -471,7 +484,9 @@ def attack_all_claims(args, exp_dirs, logger):
     # Set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    attack_target_dir = os.path.join(attack_set_dir, victim, fact_checker_model, "search_top_five", "docs")
+    # Use original model name (shorthand) for directory path if available
+    dir_fact_checker_model = getattr(args, 'original_fact_checker_model', fact_checker_model)
+    attack_target_dir = os.path.join(attack_set_dir, victim, dir_fact_checker_model, "search_top_five", "docs")
     valid_claim_ids = get_all_valid_claim_ids(attack_target_dir, variant, logger)
 
     logger.info(f"number of valid_claim_ids: {len(valid_claim_ids)}")
@@ -551,6 +566,7 @@ def attack_all_claims(args, exp_dirs, logger):
                     "exp_dirs": exp_dirs,
                     "attacker_model": attacker_model,
                     "fact_checker_model": fact_checker_model,
+                    "dir_fact_checker_model": dir_fact_checker_model,
                     "out_file": out_file,
                     "lock": lock,
                     "gpu_id": gpu_id,
@@ -562,7 +578,9 @@ def attack_all_claims(args, exp_dirs, logger):
         # Create process pool
         logger.info(f"Using {n_processes} processes to parallelize attacks")
         
-        with multiprocessing.Pool(processes=n_processes) as pool:
+        # Use maxtasksperchild=1 to ensure fresh CUDA context for each task
+        # This prevents "illegal memory access" errors from propagating to subsequent tasks
+        with multiprocessing.Pool(processes=n_processes, maxtasksperchild=1) as pool:
             # Parallel execution of attacks, using global attack_task function
             results = list(tqdm(
                 pool.imap_unordered(attack_task, tasks),
@@ -611,7 +629,7 @@ def terminate_all_processes():
     sys.exit(1)
 
 def attack_single_claim(claim_id: int, poison_rate: float, attack_type: str, victim: str, variant: str, device: str, 
-                attack_set_dir: str, exp_dirs: dict, logger, attacker_model=None, fact_checker_model=None):
+                attack_set_dir: str, exp_dirs: dict, logger, attacker_model=None, fact_checker_model=None, dir_fact_checker_model=None):
     """
     Perform poisoning attack on a single claim and measure attack effectiveness.
     
@@ -654,8 +672,11 @@ def attack_single_claim(claim_id: int, poison_rate: float, attack_type: str, vic
         gt_claim_data = gt_data[claim_id]
         del gt_data
 
-        defame_dir = os.path.join(attack_set_dir, "defame", fact_checker_model, "search_top_five", "docs")
-        infact_dir = os.path.join(attack_set_dir, "infact", fact_checker_model, "search_top_five", "docs")
+        # Use dir_fact_checker_model for paths if provided, otherwise use fact_checker_model
+        path_model_name = dir_fact_checker_model if dir_fact_checker_model else fact_checker_model
+
+        defame_dir = os.path.join(attack_set_dir, "defame", path_model_name, "search_top_five", "docs")
+        infact_dir = os.path.join(attack_set_dir, "infact", path_model_name, "search_top_five", "docs")
         target_dir = defame_dir if variant == "defame" else infact_dir
         original_report = get_report_from_cache(target_dir, claim_id)
         parsed_fc_report = parse_report(original_report)
@@ -747,7 +768,9 @@ def attack_single_claim(claim_id: int, poison_rate: float, attack_type: str, vic
                 temperature=0.01,  # Low temperature for deterministic fact-checking
                 device=device,
             )
-            llm = make_model(fact_checker_model, logger=logger, **llm_kwargs)
+            # Use shorthand for make_model if available, otherwise use the provided name
+            model_for_factory = dir_fact_checker_model if dir_fact_checker_model else fact_checker_model
+            llm = make_model(model_for_factory, logger=logger, **llm_kwargs)
 
             # Map victim system names to procedure variants
             # DEFAME uses dynamic summary-based procedure, InFact uses explicit QA-based procedure
@@ -1044,6 +1067,35 @@ if __name__ == "__main__":
     try:
         # Parse command line arguments
         args = parse_args()
+
+        # Save original model names for directory paths
+        args.original_attacker_model = args.attacker_model
+        args.original_fact_checker_model = args.fact_checker_model
+
+        # Load model mapping from available_models.csv
+        model_mapping = {}
+        try:
+            import csv
+            csv_path = os.path.join(working_dir, "config", "available_models.csv")
+            if os.path.exists(csv_path):
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        if row.get("Shorthand") and row.get("Name"):
+                            model_mapping[row["Shorthand"].strip()] = row["Name"].strip()
+            else:
+                print(f"Warning: Model config file not found at {csv_path}")
+        except Exception as e:
+            print(f"Warning: Failed to load model mapping: {e}")
+
+        # Apply mapping to model arguments
+        if args.attacker_model in model_mapping:
+            print(f"Mapping attacker model '{args.attacker_model}' to '{model_mapping[args.attacker_model]}'")
+            args.attacker_model = model_mapping[args.attacker_model]
+        
+        if args.fact_checker_model in model_mapping:
+            print(f"Mapping fact checker model '{args.fact_checker_model}' to '{model_mapping[args.fact_checker_model]}'")
+            args.fact_checker_model = model_mapping[args.fact_checker_model]
         
         # Set experiment directory
         exp_dirs = setup_experiment_dir(args)

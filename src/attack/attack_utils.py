@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import aiohttp
 import asyncio
 from tqdm import tqdm
@@ -13,7 +14,7 @@ import re
 import random
 
 # OpenAI API configuration
-with open("config/api_keys.yaml", "r") as f:
+with open("config/api_keys.yaml", "r", encoding="utf-8") as f:
     api_keys = yaml.load(f, Loader=yaml.FullLoader)
 GPT_API_KEY = api_keys["openai_api_key"]
 GPT_URL = api_keys.get("openai_api_base", "https://api.openai.com/v1")
@@ -269,6 +270,16 @@ async def query_gpt_single(session: aiohttp.ClientSession, input: str, model_nam
                     # Retry on rate limits and server errors
                     delay = base_delay * (2 ** attempt) + random.uniform(0, 1) # Exponential backoff with jitter
                     print(f"Request failed with status {response.status}. Retrying in {delay:.2f}s (Attempt {attempt + 1}/{max_retries})")
+                    
+                    # [DEBUG] Print detailed error info to help diagnose 503
+                    print(f"[DEBUG] Target URL: {GPT_URL}chat/completions")
+                    print(f"[DEBUG] Model: {model_name}")
+                    try:
+                        error_body = await response.text()
+                        print(f"[DEBUG] Server Response Body: {error_body[:500]}") # Print first 500 chars of error
+                    except Exception as e:
+                        print(f"[DEBUG] Could not read error body: {e}")
+
                     await asyncio.sleep(delay)
                     continue
                 else:
@@ -326,14 +337,18 @@ def setup_process_logger(logs_dir, claim_id):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-    # Configure console handler
-    console_handler = logging.StreamHandler()
+    # Configure console handler with utf-8 encoding
+    console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     console_handler.setLevel(logging.INFO)
+    # Ensure stdout uses utf-8
+    if sys.stdout.encoding != 'utf-8':
+        import codecs
+        sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
-    # Configure file handler
+    # Configure file handler with utf-8 encoding
     log_file = os.path.join(logs_dir, f"claim_{claim_id}.log")
-    file_handler = logging.FileHandler(log_file)
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)
 

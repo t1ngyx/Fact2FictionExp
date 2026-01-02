@@ -7,7 +7,7 @@ if __name__ == '__main__':  # evaluation uses multiprocessing
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--procedure_variant", type=str, default="no_qa")
-    parser.add_argument("--llm", type=str, default="llama33_70b_free")
+    parser.add_argument("--llm", type=str, default="gemini_25_flash")
     parser.add_argument("--variant", type=str, default="dev")
     args = parser.parse_args()
 
