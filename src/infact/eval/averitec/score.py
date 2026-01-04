@@ -1,5 +1,6 @@
 import argparse
 import json
+import ssl
 
 import nltk
 import numpy as np
@@ -7,7 +8,19 @@ import scipy
 import sklearn
 from nltk import word_tokenize
 
-nltk.download("wordnet", quiet=True)
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+try:
+    nltk.download("wordnet", quiet=True)
+    nltk.download("punkt", quiet=True)
+    nltk.download("punkt_tab", quiet=True)
+except Exception:
+    pass
 
 
 def pairwise_meteor(candidate, reference):

@@ -22,4 +22,4 @@ class NoEvidence(InFact):
                 "scraped_text": "",
             }
             q_and_a.append(qa_instance)
-        return q_and_a
+        return q_and_a, []
