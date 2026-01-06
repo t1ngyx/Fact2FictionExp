@@ -25,7 +25,7 @@ from infact.common.modeling import make_model
 from infact.fact_checker import FactChecker
 from infact.tools.search.knowledge_base import KnowledgeBase
 from infact.tools import initialize_tools
-from attack.attack_methods import create_naive_attack, create_poisoned_rag_attack, create_prompt_injection_attack, create_fact2fiction_attack
+from attack.attack_methods import create_naive_attack, create_poisoned_rag_attack, create_prompt_injection_attack, create_fact2fiction_attack, create_if2f_attack
 from attack.attack_utils import get_report_from_cache, load_gt_data, parse_report, setup_process_logger, distribute_gpus, setup_experiment_dir, get_all_valid_claim_ids, KBManager, find_larger_cache
 from sklearn.neighbors import NearestNeighbors
 from config.globals import data_base_dir, working_dir
@@ -75,7 +75,8 @@ def get_model_cache_suffix(fact_checker_model: str, attacker_model: str, attack_
     
     # fact2fiction dependent attack types
     justification_dependent_attacks = [
-        "fact2fiction"
+        "fact2fiction",
+        "if2f"
     ]
     
     if attack_type in justification_dependent_attacks:
@@ -243,7 +244,7 @@ def add_fake_evidence_to_kb(kb: KnowledgeBase, claim_id: int, fake_evidences: li
     
     return kb, embeddings
 
-def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_rate: float, all_fake_evidences: list[dict], attack_type: str, attacker_model: str, exp_dirs: dict, logger, fact_checker_model: str):
+def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_rate: float, all_fake_evidences: list[dict], attack_type: str, attacker_model: str, exp_dirs: dict, logger, fact_checker_model: str, **kwargs):
     """
     Create misleading fake evidence for target claim using the specified attack method.
     
@@ -316,9 +317,19 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
     os.makedirs(knns_dir, exist_ok=True)
     os.makedirs(resources_dir, exist_ok=True)
 
+    # Construct cache key based on ablation parameters
+    cache_attack_type = attack_type
+    if attack_type == "fact2fiction" or attack_type == "if2f":
+        if not kwargs.get("concat_query", True):
+            cache_attack_type += "_no_query"
+        if not kwargs.get("weighted", True):
+            cache_attack_type += "_no_weighted"
+        if not kwargs.get("use_justification", True):
+            cache_attack_type += "_no_justification"
+
     model_cache_suffix = get_model_cache_suffix(fact_checker_model, attacker_model, attack_type)
-    temp_knns_path = os.path.join(knns_dir, f"{claim_id}_{all_fake}_{attack_type}_knns{embed_suffix}{model_cache_suffix}.pkl")
-    temp_resources_path = os.path.join(resources_dir, f"{claim_id}_{all_fake}_{attack_type}_resources{model_cache_suffix}.pkl")
+    temp_knns_path = os.path.join(knns_dir, f"{claim_id}_{all_fake}_{cache_attack_type}_knns{embed_suffix}{model_cache_suffix}.pkl")
+    temp_resources_path = os.path.join(resources_dir, f"{claim_id}_{all_fake}_{cache_attack_type}_resources{model_cache_suffix}.pkl")
     
     logger.info(f"Target KNN model path: {temp_knns_path}")
     logger.info(f"Target resources path: {temp_resources_path}")
@@ -397,7 +408,16 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
     elif attack_type == "poisoned_rag":
         results = asyncio.run(create_poisoned_rag_attack(parsed_fc_report, attacker_model_full, num_fake, concat_query=True))
     elif attack_type == "fact2fiction":
-        results = asyncio.run(create_fact2fiction_attack(parsed_fc_report, attacker_model_full, num_fake, concat_query=True, weighted=True, use_justification=True))
+        concat_query = kwargs.get("concat_query", True)
+        weighted = kwargs.get("weighted", True)
+        use_justification = kwargs.get("use_justification", True)
+        results = asyncio.run(create_fact2fiction_attack(parsed_fc_report, attacker_model_full, num_fake, concat_query=concat_query, weighted=weighted, use_justification=use_justification))
+    elif attack_type == "if2f":
+        concat_query = kwargs.get("concat_query", True)
+        weighted = kwargs.get("weighted", True)
+        use_justification = kwargs.get("use_justification", True)
+        # Assuming if2f accepts the same parameters for now
+        results = asyncio.run(create_if2f_attack(parsed_fc_report, attacker_model_full, num_fake, concat_query=concat_query, weighted=weighted, use_justification=use_justification))
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
         
@@ -408,9 +428,18 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
         fake_evidences.append({"url": random_url, "url2text": result["created_evidence"]})
     return fake_evidences, None
 
+def check_pause_state(logger):
+    """Check for pause signal file to pause execution"""
+    pause_file = os.path.join(working_dir, "PAUSE")
+    if os.path.exists(pause_file):
+        logger.info(f"Pause signal detected: {pause_file}. Execution paused.")
+        while os.path.exists(pause_file):
+            time.sleep(5)
+        logger.info("Pause signal removed. Execution resumed.")
+
 def attack_claim_wrapper(claim_id, poison_rate, attack_type, victim, variant, device, 
                         attack_set_dir, exp_dirs, attacker_model, fact_checker_model,
-                        out_file, lock, dir_fact_checker_model=None, gpu_id=None):
+                        out_file, lock, dir_fact_checker_model=None, gpu_id=None, **kwargs):
     """Wrap attack function, handle result writing and exceptions"""
     # Set GPU for current process
     if gpu_id is not None:
@@ -420,6 +449,10 @@ def attack_claim_wrapper(claim_id, poison_rate, attack_type, victim, variant, de
         
     # Create process-level logger
     proc_logger = setup_process_logger(exp_dirs["logs_dir"], claim_id)
+    
+    # Check for pause signal
+    check_pause_state(proc_logger)
+
     proc_logger.info(f"Process started processing claim {claim_id}, using GPU: {gpu_id if gpu_id is not None else 'None'}")
     
     try:
@@ -435,7 +468,8 @@ def attack_claim_wrapper(claim_id, poison_rate, attack_type, victim, variant, de
             logger=proc_logger,
             attacker_model=attacker_model,
             fact_checker_model=fact_checker_model,
-            dir_fact_checker_model=dir_fact_checker_model
+            dir_fact_checker_model=dir_fact_checker_model,
+            **kwargs
         )
         
         # Safely write results using lock
@@ -570,7 +604,9 @@ def attack_all_claims(args, exp_dirs, logger):
                     "out_file": out_file,
                     "lock": lock,
                     "gpu_id": gpu_id,
-
+                    "concat_query": not args.no_concat_query,
+                    "weighted": not args.no_weighted,
+                    "use_justification": not args.no_justification,
                 }
             )
             tasks.append(task)
@@ -629,7 +665,7 @@ def terminate_all_processes():
     sys.exit(1)
 
 def attack_single_claim(claim_id: int, poison_rate: float, attack_type: str, victim: str, variant: str, device: str, 
-                attack_set_dir: str, exp_dirs: dict, logger, attacker_model=None, fact_checker_model=None, dir_fact_checker_model=None):
+                attack_set_dir: str, exp_dirs: dict, logger, attacker_model=None, fact_checker_model=None, dir_fact_checker_model=None, **kwargs):
     """
     Perform poisoning attack on a single claim and measure attack effectiveness.
     
@@ -730,7 +766,7 @@ def attack_single_claim(claim_id: int, poison_rate: float, attack_type: str, vic
             logger.info(f"Round {round_idx + 1}: Current accumulated fake evidence count: {len(all_fake_evidences)}")
             
             new_fake_evidences, all_embeddings = create_poisoned_evidence(
-                clean_kb, attack_report, poison_rate, all_fake_evidences, attack_type, attacker_model, exp_dirs, logger, fact_checker_model
+                clean_kb, attack_report, poison_rate, all_fake_evidences, attack_type, attacker_model, exp_dirs, logger, fact_checker_model, **kwargs
             )
             if all_embeddings is not None:
                 all_embeddings = all_embeddings
@@ -1051,6 +1087,12 @@ def parse_args():
                         help="Number of processes to parallelize")
     parser.add_argument("--gpu-ids", type=int, nargs="+", default=None,
                         help="List of GPU IDs to use, e.g., --gpu-ids 0 1 means use GPUs 0 and 1")
+    parser.add_argument("--no-concat-query", action="store_true",
+                        help="Disable query concatenation for Fact2Fiction attack")
+    parser.add_argument("--no-weighted", action="store_true",
+                        help="Disable weighted budget allocation for Fact2Fiction attack")
+    parser.add_argument("--no-justification", action="store_true",
+                        help="Disable justification usage for Fact2Fiction attack")
 
     # example run command
     # python attack/main.py --victim defame --attack-type fact2fiction --poison-rate 0.08 --attacker-model gpt-4o-mini --fact-checker-model gpt-4o-mini --n-processes 4 --gpu-ids 0 1 2 3
@@ -1110,6 +1152,7 @@ if __name__ == "__main__":
         logger.info(f"Experiment configuration: {json.dumps(vars(args), indent=2)}")
         logger.info(f"Experiment directory: {exp_dirs['exp_dir']}")        
         logger.info("Starting attack...")
+        logger.info(f"To pause execution, create a file named 'PAUSE' in: {working_dir}")
         result = attack_all_claims(args, exp_dirs, logger)
         
         if result:

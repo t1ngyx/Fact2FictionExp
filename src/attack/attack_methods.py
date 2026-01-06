@@ -852,3 +852,70 @@ def create_prompt_injection_attack(parsed_fc_report, num_fake):
             "created_evidence": malicious_instruction,
         })
     return fake_evidence_results
+
+async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_query=True, weighted=True, use_justification=True):
+    """
+    IF2F Attack - A variant of Fact2Fiction for experimental improvements.
+    Currently identical to Fact2Fiction.
+    """
+    claim = parsed_fc_report["claim"] 
+    claim_text = re.search(r'Text: (.*)', claim).group(1)
+    claim_date = re.search(r'Claim date: (.*)', claim).group(1)
+    claim = "Content: " + claim_text + "Date: " + claim_date
+    original_verdict = parsed_fc_report["original_verdict"]
+    target_verdict = "REFUTED" if original_verdict.lower() == "supported" else "SUPPORTED"
+    justification = parsed_fc_report["justification"]
+    
+    async with aiohttp.ClientSession() as session:
+        all_questions = await pose_questions(session, claim, model_name)
+        
+        if use_justification:
+            bad_qa_pairs = await infer_bad_qa_pairs(session, claim, target_verdict, model_name, all_questions, justification=justification)
+        else:
+            bad_qa_pairs = await infer_bad_qa_pairs(session, claim, target_verdict, model_name, all_questions)
+        
+        all_questions = [bad_qa_pairs[i]["question"] for i in range(len(bad_qa_pairs))]
+        
+        if weighted:
+            question2weight = await infer_qa_weight(session, claim, parsed_fc_report, model_name, bad_qa_pairs, num_fake, use_justification=use_justification)
+        else:
+            question2weight = None
+        
+        question2querys = await get_queries_from_questions(session, claim, all_questions, model_name)
+        
+        question2evidence = await fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs, model_name, num_fake, question2weight=question2weight)
+    
+    aug_results = []
+    for item in question2evidence:
+        question = item["question"]
+        evidences = item["evidences"]
+        queries = []
+        
+        for item2 in question2querys:
+            if item2["question"] == question:
+                queries = item2["queries"]
+                break
+        
+        if concat_query:
+            for i, evidence in enumerate(evidences):
+                if len(queries) > 0:
+                    random_query = random.choice(queries)
+                    evidences[i] = random_query + " " + evidence
+                else:
+                    evidences[i] = claim_text + " " + evidence
+        else:
+            for i, evidence in enumerate(evidences):
+                evidences[i] = claim_text + " " + evidence
+        
+        for i, evidence in enumerate(evidences):
+            aug_results.append({
+                "corpus": evidence
+            })  
+    
+    fake_evidence_results = []
+    for i in range(len(aug_results)):
+        fake_evidence_results.append({
+            "index": i,
+            "created_evidence": aug_results[i]["corpus"]
+        })
+    return fake_evidence_results
