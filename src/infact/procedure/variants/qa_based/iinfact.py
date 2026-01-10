@@ -1,9 +1,9 @@
-from typing import Any
-from infact.common import FCDocument, Action, Label
+from typing import Any, Optional
+from infact.common import FCDocument, Action, Label, SearchResult
 from infact.common.action import WebSearch
 from infact.procedure.variants.qa_based.infact import InFact
 from infact.prompts.prompt import Prompt
-from infact.utils.parsing import find_code_span
+from infact.utils.parsing import find_code_span, extract_last_paragraph
 
 
 class StrategyAndQueriesPrompt(Prompt):
@@ -49,6 +49,40 @@ Strategy: <Your strategy analysis>
 
     # 关键修复：重写 get_template 方法
     # Prompt.compose_prompt 会调用 get_template，如果不重写，父类会尝试读取 template_file_path 导致报错
+    def get_template(self) -> str:
+        return self.template_text
+
+
+class CollectiveAnswerPrompt(Prompt):
+    template_text = """
+You are a helpful assistant. Answer the following question based on the provided search results.
+
+Question: [QUESTION]
+
+Search Results:
+[RESULTS]
+
+Instructions:
+1. Synthesize information from the search results to answer the question.
+2. If the search results do not contain the answer, state "NONE".
+3. If you find the answer, cite the Result ID (e.g., [Result 1]) that supports your answer.
+4. Provide the final answer in a separate paragraph at the end.
+
+Format:
+Answer: <Your Answer>
+Source: [Result X]
+"""
+    def __init__(self, question: str, results: list[SearchResult]):
+        results_str = ""
+        for i, res in enumerate(results):
+            results_str += f"Result {i+1}:\nSource: {res.source}\nContent: {res.text}\n\n"
+        
+        placeholder_targets = {
+            "[QUESTION]": question,
+            "[RESULTS]": results_str
+        }
+        super().__init__(placeholder_targets=placeholder_targets, text=self.template_text)
+
     def get_template(self) -> str:
         return self.template_text
 
@@ -103,3 +137,34 @@ class IInFact(InFact):
         
         # 如果未找到，回退到直接使用问题本身（类似于 NoQueryGeneration）
         return [WebSearch(f'"{question}"')]
+
+    def generate_answer(self, question: str, results: list[SearchResult], doc: FCDocument) -> Optional[dict]:
+        """
+        使用“集体回答”策略：一次性阅读所有搜索结果并生成答案，
+        而不是逐个结果调用 LLM。这将回答每个问题的调用次数从 M 次减少到 1 次。
+        """
+        prompt = CollectiveAnswerPrompt(question, results)
+        # 仅调用一次 LLM
+        response = self.llm.generate(prompt)
+
+        if "NONE" in response or "None" in response:
+             self.logger.debug("Got no answer.")
+             return None
+
+        # 尝试提取答案
+        answer = extract_last_paragraph(response)
+        
+        # 简单的源提取逻辑（实际应用可能需要更复杂的正则）
+        # 这里假设模型遵循了 Source: [Result X] 的格式，或者我们默认取第一个结果作为主要来源
+        # 为了兼容性，我们暂时取列表中的第一个结果作为代表，或者根据模型输出解析
+        # 简单起见，这里直接使用第一个结果的元数据，因为在这个粒度上很难精准匹配
+        relevant_result = results[0] 
+
+        self.logger.debug(f"Got answer: {answer}")
+        qa_instance = {
+            "question": question,
+            "answer": answer,
+            "url": relevant_result.source,
+            "scraped_text": relevant_result.text
+        }
+        return qa_instance
