@@ -2,6 +2,7 @@ from .procedure import Procedure
 from .variants.qa_based.advanced import AdvancedQA
 from .variants.qa_based.first_result import FirstResult
 from .variants.qa_based.infact import InFact
+from .variants.qa_based.iinfact import IInFact
 from .variants.qa_based.naive import NaiveQA
 from .variants.qa_based.no_evidence import NoEvidence
 from .variants.qa_based.no_interpretation import NoInterpretation
@@ -15,6 +16,7 @@ PROCEDURE_REGISTRY = {
     "advanced": AdvancedQA,
     "first_result": FirstResult,
     "infact": InFact,
+    "iinfact": IInFact,
     "naive": NaiveQA,
     "no_evidence": NoEvidence,
     "no_interpretation": NoInterpretation,

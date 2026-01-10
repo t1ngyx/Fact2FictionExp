@@ -33,6 +33,7 @@ class FactChecker:
                  extra_plan_rules: str = None,
                  extra_judge_rules: str = None,
                  print_log_level: str = "info",
+                 procedure_kwargs: dict[str, Any] = None,
                  ):
         assert not tools or not search_engines, \
             "You are allowed to specify either tools or search engines."
@@ -75,13 +76,16 @@ class FactChecker:
 
         self.doc_summarizer = DocSummarizer(self.llm, self.logger)
 
-        self.procedure = get_procedure(procedure_variant,
-                                       llm=self.llm,
-                                       actor=self.actor,
-                                       judge=self.judge,
-                                       planner=self.planner,
-                                       logger=self.logger,
-                                       max_iterations=self.max_iterations)
+        self.procedure = get_procedure(
+            procedure_variant,
+            llm=self.llm,
+            actor=self.actor,
+            judge=self.judge,
+            planner=self.planner,
+            logger=self.logger,
+            max_iterations=self.max_iterations,
+            **(procedure_kwargs or {})
+        )
 
     def _initialize_tools(self, search_engines: dict[str, dict]) -> list[Tool]:
         """Loads a default collection of tools."""

@@ -148,3 +148,22 @@ for item in question2evidence:
 3.  **w/o Query Planning**:
     *   参数: `--no-concat-query`
     *   影响: `concat_query` 为 `False`，最后一步不进行拼接，仅使用伪造的证据文本。
+
+---
+
+## 5. Naive 攻击方法
+
+Naive 攻击是一种最简单的基线攻击方法，它不依赖大模型生成复杂的文本，而是通过简单的规则直接生成否定的声明。
+
+*   **函数**: create_naive_attack
+*   **机制**:
+    1.  获取原始声明 (Claim Text) 和原始结论 (Original Verdict)。
+    2.  构造伪造证据：
+        *   如果原结论是 **Refuted** (已反驳)，则直接重复原声明。逻辑是：既然原声明是错的，重复它就是在传播错误信息。
+        *   如果原结论是 **Supported** (已支持)，则构造一个句子声明该 Claim 是错误的。
+            *   模板: "The claim: '[Claim Text]' is [Negative Word]"
+            *   [Negative Word] 随机选自: "inaccurate", "false", "fake", "hoax", "misleading" 等。
+    3.  重复上述过程直到达到指定的伪造数量 (
+um_fake)。
+
+这种方法生成的证据语义非常直白，缺乏论证细节，通常很难欺骗复杂的 Fact-Checking 系统，主要用作其他高级攻击方法的**下限基准 (Lower Bound / Baseline)**。

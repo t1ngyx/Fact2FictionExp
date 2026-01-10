@@ -102,7 +102,7 @@ elif embedding_model == "Qwen/Qwen3-Embedding-0.6B":
 
 
 # Attack type definitions
-ATTACK_TYPES = ["naive", "disinformation", "poisoned_rag", "prompt_injection", "fact2fiction"]
+ATTACK_TYPES = ["naive", "disinformation", "poisoned_rag", "prompt_injection", "fact2fiction", "if2f"]
 VICTIM_SYSTEMS = ['infact', 'defame', 'no_qa']
 
 def convert_numpy_types(obj):
@@ -424,7 +424,7 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
     random.shuffle(results)
     for result in results:
         random_url = random.choice(list(urls))
-        random_url = random_url + "/created"  # Mark as fake evidence
+        random_url = random_url + "/created"
         fake_evidences.append({"url": random_url, "url2text": result["created_evidence"]})
     return fake_evidences, None
 

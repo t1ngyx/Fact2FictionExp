@@ -1,6 +1,7 @@
 from infact.eval.evaluate import evaluate
 from multiprocessing import set_start_method
 import argparse
+import json
 
 if __name__ == '__main__':  # evaluation uses multiprocessing
     set_start_method("spawn")
@@ -9,7 +10,15 @@ if __name__ == '__main__':  # evaluation uses multiprocessing
     parser.add_argument("--procedure_variant", type=str, default="no_qa")
     parser.add_argument("--llm", type=str, default="gemini_25_flash")
     parser.add_argument("--variant", type=str, default="dev")
+    parser.add_argument("--procedure_kwargs_json", type=str, default=None)
     args = parser.parse_args()
+
+    procedure_kwargs = None
+    if args.procedure_kwargs_json:
+        try:
+            procedure_kwargs = json.loads(args.procedure_kwargs_json)
+        except Exception:
+            procedure_kwargs = None
 
     evaluate(
         llm=args.llm,
@@ -23,6 +32,7 @@ if __name__ == '__main__':  # evaluation uses multiprocessing
             procedure_variant=args.procedure_variant,
             max_iterations=3,
             max_result_len=64_000,  # characters
+            procedure_kwargs=procedure_kwargs,
         ),
         llm_kwargs=dict(temperature=0.01),
         benchmark_name="averitec",

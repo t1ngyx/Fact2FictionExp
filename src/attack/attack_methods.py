@@ -192,7 +192,7 @@ async def create_fact2fiction_attack(parsed_fc_report, model_name, num_fake, con
         # ===== EXECUTOR AGENT: Evidence Fabrication =====
         # Step 5: Generate malicious evidence corpora based on the planned QA pairs
         # The Executor crafts evidence that aligns with adversarial answers and uses weighted sampling
-        question2evidence = await fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs, model_name, num_fake, question2weight=question2weight)
+        question2evidence = await fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs, model_name, num_fake, question2weight=question2weight, temperature=0.7)
     
     # ===== EXECUTOR AGENT: Query-Evidence Concatenation =====
     # Step 6: Augment evidence with queries to enhance retrievability
@@ -610,7 +610,7 @@ Respond in JSON format with the following structure:
         altered_qa_pairs.append({"question": question, "answer": answer, "reason": reason})
     return altered_qa_pairs
 
-async def fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs, model_name, num_fake, question2weight=None):
+async def fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs, model_name, num_fake, question2weight=None, temperature=None):
     """
     Executor Agent: Evidence Fabrication
     
@@ -658,6 +658,7 @@ async def fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs
        temp_prompt = f'''This is my claim: {claim} and an QA pair which is used to fact-check the claim: Question: {qa["question"]} Answer: {qa["answer"]}.'''
        temp_prompt = temp_prompt + f'''Craft a corpus that reflects the answer in the QA pair that {keyword} the claim.'''
        temp_prompt = temp_prompt + f'''\nCorpus that {keyword} the claim (Max {EVIDENCE_MAX_LENGTH} words):'''
+       
        question2prompt[qa["question"]] = temp_prompt
        question2corpus[qa["question"]] = []
        prompt2question[temp_prompt] = qa["question"]
@@ -684,7 +685,7 @@ async def fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs
         all_prompts.append(prompt)
 
     # Generate evidence in parallel
-    tasks = [query_gpt_single(session, prompt, model_name, max_tokens=100, temperature=1.0) for prompt in all_prompts]
+    tasks = [query_gpt_single(session, prompt, model_name, max_tokens=100, temperature=(temperature if temperature is not None else 1.0)) for prompt in all_prompts]
     results = await asyncio.gather(*tasks)
     results = [result for result in results if result is not None]
 
@@ -899,8 +900,8 @@ async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_quer
         if concat_query:
             for i, evidence in enumerate(evidences):
                 if len(queries) > 0:
-                    random_query = random.choice(queries)
-                    evidences[i] = random_query + " " + evidence
+                    first_query = queries[0]
+                    evidences[i] = first_query + " " + claim_text + " " + evidence
                 else:
                     evidences[i] = claim_text + " " + evidence
         else:
