@@ -221,7 +221,31 @@ def add_fake_evidence_to_kb(kb: KnowledgeBase, claim_id: int, fake_evidences: li
         fake_embeddings = np.array([])
     
     # Merge embeddings, maintaining the same order as all_resources
-    embeddings = np.concatenate([original_embeddings, fake_embeddings], axis=0)
+    if original_embeddings.size == 0 and fake_embeddings.size == 0:
+        embeddings = np.array([])
+    else:
+        # Normalize shapes to 2D for safe concatenation
+        def ensure_2d(arr):
+            if arr.ndim == 1 and arr.size > 0:
+                return arr.reshape(1, -1)
+            return arr
+        
+        original_embeddings = ensure_2d(original_embeddings)
+        fake_embeddings = ensure_2d(fake_embeddings)
+        
+        embed_dim = None
+        if original_embeddings.ndim == 2 and original_embeddings.size > 0:
+            embed_dim = original_embeddings.shape[1]
+        elif fake_embeddings.ndim == 2 and fake_embeddings.size > 0:
+            embed_dim = fake_embeddings.shape[1]
+        
+        if embed_dim is not None:
+            if original_embeddings.size == 0:
+                original_embeddings = np.zeros((0, embed_dim))
+            if fake_embeddings.size == 0:
+                fake_embeddings = np.zeros((0, embed_dim))
+        
+        embeddings = np.concatenate([original_embeddings, fake_embeddings], axis=0)
     
     if len(embeddings) > 0:
         temp_knn = NearestNeighbors(n_neighbors=min(10, len(embeddings))).fit(embeddings)
@@ -326,6 +350,11 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
             cache_attack_type += "_no_weighted"
         if not kwargs.get("use_justification", True):
             cache_attack_type += "_no_justification"
+        if attack_type == "if2f" and not kwargs.get("enable_prune", True):
+            cache_attack_type += "_no_prune"
+        if attack_type == "if2f":
+            prune_method = kwargs.get("prune_method", "hybrid")
+            cache_attack_type += f"_{prune_method}"
 
     model_cache_suffix = get_model_cache_suffix(fact_checker_model, attacker_model, attack_type)
     temp_knns_path = os.path.join(knns_dir, f"{claim_id}_{all_fake}_{cache_attack_type}_knns{embed_suffix}{model_cache_suffix}.pkl")
@@ -416,8 +445,9 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
         concat_query = kwargs.get("concat_query", True)
         weighted = kwargs.get("weighted", True)
         use_justification = kwargs.get("use_justification", True)
-        # Assuming if2f accepts the same parameters for now
-        results = asyncio.run(create_if2f_attack(parsed_fc_report, attacker_model_full, num_fake, concat_query=concat_query, weighted=weighted, use_justification=use_justification))
+        enable_prune = kwargs.get("enable_prune", True)
+        prune_method = kwargs.get("prune_method", "hybrid")
+        results = asyncio.run(create_if2f_attack(parsed_fc_report, attacker_model_full, num_fake, concat_query=concat_query, weighted=weighted, use_justification=use_justification, enable_prune=enable_prune, prune_method=prune_method))
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
         
@@ -607,6 +637,8 @@ def attack_all_claims(args, exp_dirs, logger):
                     "concat_query": not args.no_concat_query,
                     "weighted": not args.no_weighted,
                     "use_justification": not args.no_justification,
+                    "enable_prune": not args.no_if2f_prune,
+                    "prune_method": args.if2f_prune_method,
                 }
             )
             tasks.append(task)
@@ -1093,6 +1125,11 @@ def parse_args():
                         help="Disable weighted budget allocation for Fact2Fiction attack")
     parser.add_argument("--no-justification", action="store_true",
                         help="Disable justification usage for Fact2Fiction attack")
+    parser.add_argument("--no-if2f-prune", action="store_true",
+                        help="Disable lightweight question pruning for IF2F")
+    parser.add_argument("--if2f-prune-method", type=str, default="hybrid",
+                        choices=["hybrid", "token"],
+                        help="IF2F pruning relevance method: hybrid (TF-IDF+entity) or token overlap")
 
     # example run command
     # python attack/main.py --victim defame --attack-type fact2fiction --poison-rate 0.08 --attacker-model gpt-4o-mini --fact-checker-model gpt-4o-mini --n-processes 4 --gpu-ids 0 1 2 3

@@ -8,34 +8,34 @@ from infact.utils.parsing import find_code_span
 
 class StrategyAndQueriesPrompt(Prompt):
     # 定义提示模板文本
-    template_text = """
-You are a professional fact-checker. Your task is to verify the following claim:
+    template_text = """# Instructions
+You are a fact-checker. Your overall motivation is to verify a given Claim. You are at the beginning of the fact-check, i.e. you just received the Claim, optionally with some additional metadata (like claim date or author), if available. **Your task right now is to prepare the fact-check.** That is,
 
-Claim: [CLAIM]
+1. **Verification Strategy**: Briefly analyze the claim. Identify the key entities, specific relationships, dates, or numerical claims that must be verified. Outline a concise strategy for verification.
+2. **Questions and Search Queries**: Based on your strategy, propose [N_QUESTIONS] pairs of specific questions and corresponding search queries.
 
-# Part 1: Verification Strategy
-Briefly analyze the claim. Identify the key entities, specific relationships, dates, or numerical claims that must be verified. Outline a concise strategy for verification.
+IMPORTANT: Follow these rules:
+* State every single question in a way that it can be understood independently and without additional context. Therefore, be explicit and do not use pronouns or generic terms in place of names or objects.
+* Enclose each single question with backticks like `this`.
+* Enclose each single search query with backticks like `this`.
+* The Search Query should be keyword-optimized suitable for a search engine to find the answer to the question.
 
-# Part 2: Questions and Search Queries
-Based on your strategy, propose [N_QUESTIONS] pairs of specific questions and corresponding search queries.
+# Examples
+Claim: "New Zealand’s new Food Bill bans gardening"
+Strategy: The claim is about a specific bill in New Zealand. I need to check if such a bill exists and if it contains provisions banning gardening.
+1. Question: `Did New Zealand's government pass a food bill that restricted gardening activities for its citizen?`
+   Query: `New Zealand Food Bill gardening ban`
 
-- **Question**: A complete, self-contained natural language question that asks about a specific fact needed to verify the claim. Do not use pronouns like "he" or "it"; use full names.
-- **Search Query**: A keyword-optimized query suitable for a search engine to find the answer to the question.
+2. Question: `What are the provisions of New Zealand's Food Bill regarding home gardening?`
+   Query: `New Zealand Food Bill home gardening provisions`
 
-Please format your response exactly as follows (using backticks for the content):
+# The Claim
+[CLAIM]
 
-Strategy: <Your strategy analysis>
-
-1. Question: `[Question 1]`
-   Query: `[Search Query 1]`
-
-2. Question: `[Question 2]`
-   Query: `[Search Query 2]`
-
-...
+# Verification Strategy
 """
 
-    def __init__(self, doc: FCDocument, n_questions: int = 10):
+    def __init__(self, doc: FCDocument, n_questions: int = 8):
         # 初始化占位符，替换模板中的 [CLAIM] 和 [N_QUESTIONS]
         placeholder_targets = {
             "[CLAIM]": doc.claim,
@@ -55,13 +55,12 @@ Strategy: <Your strategy analysis>
 
 class IInFact(InFact):
     """
-    InFact 的改进版本，结合了消融实验的发现。
-    它通过添加验证策略步骤来改进“解读”阶段，并通过在生成问题时批量生成上下文相关的查询来改进“查询生成”阶段。
+    通过添加验证策略步骤来改进“解读”阶段，并通过在生成问题时批量生成上下文相关的查询来改进“查询生成”阶段。
     这种方法显著降低了 LLM 的成本（将 N+1 次调用减少为 1 次调用）。
     """
 
     def apply_to(self, doc: FCDocument) -> (Label, dict[str, Any]):
-        # 为本次运行初始化查询缓存
+        # 为本次运行初始化查询
         self._query_cache = {}
         # 调用父类实现来运行流程
         return super().apply_to(doc)
@@ -71,7 +70,7 @@ class IInFact(InFact):
         在验证策略的指导下，一步生成问题和搜索查询。
         """
         # 使用自定义的提示模板
-        prompt = StrategyAndQueriesPrompt(doc, n_questions=no_of_questions)
+        prompt = StrategyAndQueriesPrompt(doc, n_questions=no_of_questions) # 不用interpretation
         response = self.llm.generate(prompt)
 
         # 提取所有的代码片段（问题和查询）

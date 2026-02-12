@@ -670,10 +670,17 @@ async def fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs
            # Uniform weighting if budget planning is disabled
            weights_list.append(1.0)
     
-    # Sort questions by weight from high to low for prioritized processing
-    questions_list, weights_list = zip(*sorted(zip(questions_list, weights_list), key=lambda x: x[1], reverse=True))
-    questions_list = list(questions_list)
-    weights_list = list(weights_list)
+    if len(questions_list) > 0:
+        questions_list, weights_list = zip(*sorted(zip(questions_list, weights_list), key=lambda x: x[1], reverse=True))
+        questions_list = list(questions_list)
+        weights_list = list(weights_list)
+    else:
+        if len(bad_qa_pairs) > 0:
+            for qa in bad_qa_pairs:
+                questions_list.append(qa["question"])
+                weights_list.append(1.0)
+        else:
+            return bad_qa_pairs
 
     # Sample questions based on weights to generate evidence
     # This implements the budget allocation: m_k = ⌈m · (w_k / Σw_s)⌉
@@ -807,7 +814,8 @@ async def infer_qa_weight(session, claim, parsed_fc_report, model_name, bad_qa_p
     
     # Filter out questions with low weights if we have enough questions
     if num_fake < len(question2weight):
-        question2weight = {question: weight for question, weight in question2weight.items() if weight > 5}
+        filtered = {question: weight for question, weight in question2weight.items() if weight > 5}
+        question2weight = filtered if len(filtered) > 0 else question2weight
     
     # Sort questions by weight from high to low
     question2weight = dict(sorted(question2weight.items(), key=lambda x: x[1], reverse=True))
@@ -818,10 +826,16 @@ async def infer_qa_weight(session, claim, parsed_fc_report, model_name, bad_qa_p
         for question in question2weight:
             question2weight[question] = question2weight[question] / total_weight
     else:
-        # If all weights are 0, assign equal weights
-        equal_weight = 1.0 / len(question2weight)
-        for question in question2weight:
-            question2weight[question] = equal_weight
+        if len(question2weight) == 0:
+            if len(bad_qa_pairs) > 0:
+                equal_weight = 1.0 / len(bad_qa_pairs)
+                question2weight = {qa["question"]: equal_weight for qa in bad_qa_pairs}
+            else:
+                question2weight = {}
+        else:
+            equal_weight = 1.0 / len(question2weight)
+            for question in question2weight:
+                question2weight[question] = equal_weight
             
     return question2weight
 
@@ -854,10 +868,26 @@ def create_prompt_injection_attack(parsed_fc_report, num_fake):
         })
     return fake_evidence_results
 
-async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_query=True, weighted=True, use_justification=True):
+async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_query=True, weighted=True, use_justification=True, enable_prune=True, prune_method="hybrid"):
     """
-    IF2F Attack - A variant of Fact2Fiction for experimental improvements.
-    Currently identical to Fact2Fiction.
+    IF2F Attack - Fact2Fiction structure with lightweight pruning.
+    
+    Keeps the original Planner/Executor structure, while pruning low-relevance
+    questions before query planning and evidence fabrication. This reduces API
+    calls and keeps evidence focused, without touching other modules.
+    
+    Args:
+        parsed_fc_report: Parsed fact-checking report containing claim, verdict, and justification
+        model_name: Name of the LLM model to use for attack generation
+        num_fake: Number of fake evidence to generate (poisoning budget)
+        concat_query: Whether to concatenate search queries with evidence (Query Planning component)
+        weighted: Whether to use importance-based budget allocation (Budget Planning component)
+        use_justification: Whether to exploit justifications for targeted attacks (Answer Planning component)
+        enable_prune: Whether to apply lightweight question pruning (IF2F only)
+        prune_method: Pruning relevance method: "hybrid" or "token"
+        
+    Returns:
+        list: List of fake evidence dictionaries with index and created_evidence
     """
     claim = parsed_fc_report["claim"] 
     claim_text = re.search(r'Text: (.*)', claim).group(1)
@@ -868,24 +898,117 @@ async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_quer
     justification = parsed_fc_report["justification"]
     
     async with aiohttp.ClientSession() as session:
+        # Step 1: Sub-question Decomposition
         all_questions = await pose_questions(session, claim, model_name)
         
+        # Step 2: Answer Planning
         if use_justification:
             bad_qa_pairs = await infer_bad_qa_pairs(session, claim, target_verdict, model_name, all_questions, justification=justification)
         else:
             bad_qa_pairs = await infer_bad_qa_pairs(session, claim, target_verdict, model_name, all_questions)
         
+        # Step 2.5: Lightweight pruning (no extra API cost)
+        if enable_prune and bad_qa_pairs:
+            def tokenize_terms(text):
+                return re.findall(r"[A-Za-z0-9]{3,}", text.lower())
+            
+            def build_doc_tokens(text):
+                return tokenize_terms(text)
+            
+            def extract_entities(text):
+                # Custom rules: capitalized phrases, acronyms, numbers, quoted strings
+                entities = set()
+                entities.update(re.findall(r"\b(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b", text))
+                entities.update(re.findall(r"\b[A-Z]{2,}\b", text))
+                entities.update(re.findall(r"\b\d{2,}\b", text))
+                entities.update(re.findall(r"\"([^\"]{3,})\"", text))
+                return set(e.strip() for e in entities if e.strip())
+            
+            def bm25_scores(query_text, docs_tokens, k1=1.5, b=0.75):
+                query_tokens = tokenize_terms(query_text)
+                if not query_tokens:
+                    return [0.0] * len(docs_tokens)
+                doc_lens = [len(toks) for toks in docs_tokens]
+                avgdl = sum(doc_lens) / max(1, len(doc_lens))
+                # Document frequencies
+                df = {}
+                for tok in set(query_tokens):
+                    df[tok] = sum(1 for doc in docs_tokens if tok in doc)
+                # IDF
+                N = len(docs_tokens)
+                idf = {tok: max(0.0, ((N - df[tok] + 0.5) / (df[tok] + 0.5))) for tok in df}
+                scores = []
+                for toks, dl in zip(docs_tokens, doc_lens):
+                    score = 0.0
+                    term_freq = {}
+                    for t in toks:
+                        term_freq[t] = term_freq.get(t, 0) + 1
+                    for tok in df:
+                        tf = term_freq.get(tok, 0)
+                        denom = tf + k1 * (1 - b + b * (dl / max(1.0, avgdl)))
+                        score += idf[tok] * (tf * (k1 + 1)) / max(1.0, denom)
+                    scores.append(score)
+                return scores
+            
+            context_text = f"{claim_text} {justification or ''}"
+            questions = [qa.get("question", "") for qa in bad_qa_pairs]
+            
+            if prune_method == "token":
+                context_terms = set(tokenize_terms(context_text))
+                hybrid_scores = [
+                    len(set(tokenize_terms(q)) & context_terms) / max(1, len(set(tokenize_terms(q))))
+                    for q in questions
+                ]
+            else:
+                # BM25 similarity between context and question texts
+                docs_tokens = [build_doc_tokens(q) for q in questions]
+                bm25_scores_list = bm25_scores(context_text, docs_tokens)
+                
+                # Entity overlap ratio (custom rules)
+                context_entities = extract_entities(context_text)
+                entity_scores = []
+                for q in questions:
+                    q_entities = extract_entities(q)
+                    if not q_entities:
+                        entity_scores.append(0.0)
+                    else:
+                        entity_scores.append(len(q_entities & context_entities) / len(q_entities))
+                
+                # Hybrid score: BM25 + entity overlap
+                hybrid_scores = [
+                    0.7 * bm25_scores_list[i] + 0.3 * entity_scores[i]
+                    for i in range(len(questions))
+                ]
+            
+            max_questions = min(len(bad_qa_pairs), max(4, min(8, num_fake)))
+            if max_questions < len(bad_qa_pairs):
+                scored = list(zip(bad_qa_pairs, hybrid_scores))
+                scored.sort(key=lambda x: x[1], reverse=True)
+                bad_qa_pairs = [qa for qa, _ in scored[:max_questions]]
+        
         all_questions = [bad_qa_pairs[i]["question"] for i in range(len(bad_qa_pairs))]
         
+        # Step 3: Budget Planning
         if weighted:
             question2weight = await infer_qa_weight(session, claim, parsed_fc_report, model_name, bad_qa_pairs, num_fake, use_justification=use_justification)
         else:
             question2weight = None
         
+        # Step 4: Query Planning
         question2querys = await get_queries_from_questions(session, claim, all_questions, model_name)
         
-        question2evidence = await fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs, model_name, num_fake, question2weight=question2weight)
+        # Step 5: Evidence Fabrication
+        question2evidence = await fabricate_evidence_for_qa(session, claim, target_verdict, bad_qa_pairs, model_name, num_fake, question2weight=question2weight, temperature=0.7)
     
+    # Step 6: Query-Evidence Concatenation
+    def score_query(query, context):
+        q_terms = set(re.findall(r"[A-Za-z0-9]{3,}", query.lower()))
+        if not q_terms:
+            return 0.0
+        ctx_terms = set(re.findall(r"[A-Za-z0-9]{3,}", context.lower()))
+        return len(q_terms & ctx_terms) / len(q_terms)
+
+    context_text = f"{claim_text} {justification or ''}"
     aug_results = []
     for item in question2evidence:
         question = item["question"]
@@ -900,8 +1023,8 @@ async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_quer
         if concat_query:
             for i, evidence in enumerate(evidences):
                 if len(queries) > 0:
-                    first_query = queries[0]
-                    evidences[i] = first_query + " " + claim_text + " " + evidence
+                    best_query = max(queries, key=lambda q: score_query(q, context_text))
+                    evidences[i] = best_query + " " + claim_text + " " + evidence
                 else:
                     evidences[i] = claim_text + " " + evidence
         else:
