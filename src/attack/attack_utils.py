@@ -425,6 +425,15 @@ def setup_experiment_dir(args):
         exp_name = args.exp_name
     else:
         exp_name = f"{args.variant}_{args.attack_type}_{args.victim}_{args.poison_rate}"
+        if args.attack_type == "if2f":
+            if getattr(args, "no_if2f_prune", False):
+                exp_name += "_noprune"
+            else:
+                prune_method = getattr(args, "if2f_prune_method", "hybrid")
+                exp_name += f"_{prune_method}"
+                if prune_method == "hybrid":
+                    bmrate = getattr(args, "if2f_bm25_weight", 0.7)
+                    exp_name += f"_bm{bmrate:.2f}"
     
     attack_cache_dir = os.path.join(working_dir, "attack", "attack_cache", args.variant)
     os.makedirs(attack_cache_dir, exist_ok=True)

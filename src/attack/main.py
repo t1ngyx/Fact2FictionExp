@@ -355,6 +355,9 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
         if attack_type == "if2f":
             prune_method = kwargs.get("prune_method", "hybrid")
             cache_attack_type += f"_{prune_method}"
+            if prune_method == "hybrid":
+                bmrate = kwargs.get("bmrate", 0.7)
+                cache_attack_type += f"_bm{bmrate:.2f}"
 
     model_cache_suffix = get_model_cache_suffix(fact_checker_model, attacker_model, attack_type)
     temp_knns_path = os.path.join(knns_dir, f"{claim_id}_{all_fake}_{cache_attack_type}_knns{embed_suffix}{model_cache_suffix}.pkl")
@@ -447,7 +450,8 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
         use_justification = kwargs.get("use_justification", True)
         enable_prune = kwargs.get("enable_prune", True)
         prune_method = kwargs.get("prune_method", "hybrid")
-        results = asyncio.run(create_if2f_attack(parsed_fc_report, attacker_model_full, num_fake, concat_query=concat_query, weighted=weighted, use_justification=use_justification, enable_prune=enable_prune, prune_method=prune_method))
+        bmrate = kwargs.get("bmrate", 0.7)
+        results = asyncio.run(create_if2f_attack(parsed_fc_report, attacker_model_full, num_fake, concat_query=concat_query, weighted=weighted, use_justification=use_justification, enable_prune=enable_prune, prune_method=prune_method, bmrate=bmrate))
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
         
@@ -639,6 +643,7 @@ def attack_all_claims(args, exp_dirs, logger):
                     "use_justification": not args.no_justification,
                     "enable_prune": not args.no_if2f_prune,
                     "prune_method": args.if2f_prune_method,
+                    "bmrate": args.if2f_bm25_weight,
                 }
             )
             tasks.append(task)
@@ -1130,6 +1135,8 @@ def parse_args():
     parser.add_argument("--if2f-prune-method", type=str, default="hybrid",
                         choices=["hybrid", "token"],
                         help="IF2F pruning relevance method: hybrid (TF-IDF+entity) or token overlap")
+    parser.add_argument("--if2f-bm25-weight", type=float, default=0.7,
+                        help="Weight for BM25 in IF2F hybrid pruning (0.0 to 1.0). Default is 0.7.")
 
     # example run command
     # python attack/main.py --victim defame --attack-type fact2fiction --poison-rate 0.08 --attacker-model gpt-4o-mini --fact-checker-model gpt-4o-mini --n-processes 4 --gpu-ids 0 1 2 3

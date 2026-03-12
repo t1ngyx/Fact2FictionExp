@@ -868,7 +868,7 @@ def create_prompt_injection_attack(parsed_fc_report, num_fake):
         })
     return fake_evidence_results
 
-async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_query=True, weighted=True, use_justification=True, enable_prune=True, prune_method="hybrid"):
+async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_query=True, weighted=True, use_justification=True, enable_prune=True, prune_method="hybrid", bmrate=0.7):
     """
     IF2F Attack - Fact2Fiction structure with lightweight pruning.
     
@@ -885,6 +885,7 @@ async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_quer
         use_justification: Whether to exploit justifications for targeted attacks (Answer Planning component)
         enable_prune: Whether to apply lightweight question pruning (IF2F only)
         prune_method: Pruning relevance method: "hybrid" or "token"
+        bmrate: Weight for BM25 score in hybrid scoring (0.0~1.0)
         
     Returns:
         list: List of fake evidence dictionaries with index and created_evidence
@@ -896,6 +897,8 @@ async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_quer
     original_verdict = parsed_fc_report["original_verdict"]
     target_verdict = "REFUTED" if original_verdict.lower() == "supported" else "SUPPORTED"
     justification = parsed_fc_report["justification"]
+    if bmrate is None:
+        bmrate = 0.7
     
     async with aiohttp.ClientSession() as session:
         # Step 1: Sub-question Decomposition
@@ -953,6 +956,7 @@ async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_quer
             context_text = f"{claim_text} {justification or ''}"
             questions = [qa.get("question", "") for qa in bad_qa_pairs]
             
+            bmrate_clamped = max(0.0, min(1.0, bmrate))
             if prune_method == "token":
                 context_terms = set(tokenize_terms(context_text))
                 hybrid_scores = [
@@ -976,7 +980,7 @@ async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_quer
                 
                 # Hybrid score: BM25 + entity overlap
                 hybrid_scores = [
-                    0.7 * bm25_scores_list[i] + 0.3 * entity_scores[i]
+                    bmrate_clamped * bm25_scores_list[i] + (1 - bmrate_clamped) * entity_scores[i]
                     for i in range(len(questions))
                 ]
             

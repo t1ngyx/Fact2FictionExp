@@ -466,7 +466,7 @@ def attack_all_claims(args, exp_dirs, logger):
     fact_checker_model = args.fact_checker_model
     n_processes = args.n_processes
     gpu_ids = args.gpu_ids
-
+    bmrate = args.if2f_bm25_weight
     
     # Set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -554,7 +554,7 @@ def attack_all_claims(args, exp_dirs, logger):
                     "out_file": out_file,
                     "lock": lock,
                     "gpu_id": gpu_id,
-
+                    "bmrate": bmrate,
                 }
             )
             tasks.append(task)

@@ -126,6 +126,9 @@ max_questions = min(len(bad_qa_pairs), max(4, min(8, num_fake)))
 - `--if2f-prune-method token`  
   使用上一版本的 token overlap 剪枝方式
 
+- `--if2f-bm25-weight`  
+  设置 BM25 在混合评分中的权重（默认 0.7）
+
 - `--no-concat-query`  
   关闭查询拼接（不影响剪枝）
 
