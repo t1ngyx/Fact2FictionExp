@@ -348,23 +348,13 @@ def format_report(report):
 def build_output_subdir(config):
     """Build output subdirectory name from attack experiment config parameters.
 
-    Base format: {variant}_{attack_type}_{victim}_{poison_rate}
-    IF2F with pruning appends: _hybrid_bm{weight}
+    Format: {variant}_{attack_type}_{victim}_{poison_rate}
     """
     variant = config.get("variant", "unknown")
     attack_type = config.get("attack_type", "unknown")
     victim = config.get("victim", "unknown")
     poison_rate = config.get("poison_rate", 0)
-    name = "%s_%s_%s_%s" % (variant, attack_type, victim, poison_rate)
-
-    prune_method = config.get("if2f_prune_method")
-    if prune_method and attack_type == "if2f":
-        name += "_%s" % prune_method
-        bm25_weight = config.get("if2f_bm25_weight")
-        if bm25_weight is not None:
-            name += "_bm%.2f" % bm25_weight
-
-    return name
+    return "%s_%s_%s_%s" % (variant, attack_type, victim, poison_rate)
 
 
 def get_default_output_dir():

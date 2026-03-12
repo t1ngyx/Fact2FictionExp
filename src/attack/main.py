@@ -653,13 +653,31 @@ def attack_all_claims(args, exp_dirs, logger):
         
         # Use maxtasksperchild=1 to ensure fresh CUDA context for each task
         # This prevents "illegal memory access" errors from propagating to subsequent tasks
+        #
+        # We use apply_async + per-task timeout instead of imap_unordered because
+        # imap_unordered hangs forever when a worker process crashes at the OS level
+        # (e.g. CUDA OOM, segfault) — the iterator waits for a result that never arrives.
+        TASK_TIMEOUT = 600  # seconds per task
+        
         with multiprocessing.Pool(processes=n_processes, maxtasksperchild=1) as pool:
-            # Parallel execution of attacks, using global attack_task function
-            results = list(tqdm(
-                pool.imap_unordered(attack_task, tasks),
-                total=len(tasks),
-                desc="Parallelizing attacks"
-            ))
+            async_results = [pool.apply_async(attack_task, (task,)) for task in tasks]
+            
+            results = []
+            pbar = tqdm(total=len(tasks), desc="Parallelizing attacks")
+            for i, ar in enumerate(async_results):
+                try:
+                    result = ar.get(timeout=TASK_TIMEOUT)
+                    results.append(result)
+                except multiprocessing.TimeoutError:
+                    claim_id = tasks[i][0]
+                    logger.warning(f"Task for claim {claim_id} timed out after {TASK_TIMEOUT}s, skipping")
+                    results.append(False)
+                except Exception as e:
+                    claim_id = tasks[i][0]
+                    logger.warning(f"Task for claim {claim_id} failed with error: {e}, skipping")
+                    results.append(False)
+                pbar.update(1)
+            pbar.close()
         
         # Count results
         success_count = sum(1 for r in results if r)
