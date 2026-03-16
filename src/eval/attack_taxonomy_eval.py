@@ -543,13 +543,34 @@ def _save_results(out_dir, taxonomy_records, agg, configs, model):
     return report
 
 
+FILTER_SUCCESS = "success"
+FILTER_FAIL_ONLY = "fail_only"
+FILTER_ALL = "all"
+
+
+def _filter_records(records, filter_mode):
+    """Filter attack records based on the selected mode."""
+    if filter_mode == FILTER_SUCCESS:
+        return [r for r in records if r.get("attack_success")]
+    elif filter_mode == FILTER_FAIL_ONLY:
+        return [r for r in records
+                if r.get("fact_check_fail") and not r.get("attack_success")]
+    return records
+
+
 def run_taxonomy_eval(attack_dirs, model="gemini-2.5-flash",
                       output_dir=None, concurrency=5,
-                      only_attack_success=True):
+                      filter_mode=FILTER_SUCCESS):
     """End-to-end taxonomy evaluation pipeline."""
     if output_dir is None:
         output_dir = str(Path(__file__).parent / "out" / "taxonomy")
     base_dir = Path(output_dir)
+
+    dir_suffix = ""
+    if filter_mode == FILTER_FAIL_ONLY:
+        dir_suffix = "_fail"
+    elif filter_mode == FILTER_ALL:
+        dir_suffix = "_all"
 
     all_records = []
     all_configs = []
@@ -566,11 +587,11 @@ def run_taxonomy_eval(attack_dirs, model="gemini-2.5-flash",
                 cfg = json.load(f)
         all_configs.append(cfg)
 
-        if only_attack_success:
-            records = [r for r in records if r.get("attack_success")]
+        records = _filter_records(records, filter_mode)
         all_records.extend(records)
         per_dir_info.append((ad, cfg, records))
-        logger.info("Loaded %d records from %s", len(records), ad.name)
+        logger.info("Loaded %d %s records from %s",
+                     len(records), filter_mode, ad.name)
 
     if not all_records:
         logger.error("No records to classify.")
@@ -591,9 +612,9 @@ def run_taxonomy_eval(attack_dirs, model="gemini-2.5-flash",
             continue
 
         if cfg:
-            sub_name = build_output_subdir(cfg)
+            sub_name = build_output_subdir(cfg) + dir_suffix
         else:
-            sub_name = ad.name
+            sub_name = ad.name + dir_suffix
         sub_dir = base_dir / sub_name
 
         dir_agg = aggregate(dir_taxonomy)
@@ -604,9 +625,10 @@ def run_taxonomy_eval(attack_dirs, model="gemini-2.5-flash",
 
     if len(per_dir_info) > 1:
         total_agg = aggregate(taxonomy_records)
-        _save_results(base_dir, taxonomy_records, total_agg, all_configs, model)
+        combined_dir = base_dir / ("combined" + dir_suffix)
+        _save_results(combined_dir, taxonomy_records, total_agg, all_configs, model)
         print(format_report(total_agg, taxonomy_records))
-        print("\nCombined results saved to: %s" % base_dir)
+        print("\nCombined results saved to: %s" % combined_dir)
 
     return taxonomy_records, aggregate(taxonomy_records)
 
@@ -621,17 +643,28 @@ def main():
                    help="Output directory (default: eval/out/taxonomy)")
     p.add_argument("--concurrency", type=int, default=5,
                    help="Max concurrent API calls")
-    p.add_argument("--include-fail", action="store_true",
-                   help="Also classify fact_check_fail (not just attack_success)")
+    grp = p.add_mutually_exclusive_group()
+    grp.add_argument("--fail-only", action="store_true",
+                     help="Classify only fact_check_fail (not attack_success) samples; "
+                          "output dirs get _fail suffix")
+    grp.add_argument("--all", action="store_true", dest="include_all",
+                     help="Classify all samples (both success and fail)")
     args = p.parse_args()
 
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S")
 
+    if args.fail_only:
+        mode = FILTER_FAIL_ONLY
+    elif args.include_all:
+        mode = FILTER_ALL
+    else:
+        mode = FILTER_SUCCESS
+
     run_taxonomy_eval(attack_dirs=args.attack_dir, model=args.model,
                       output_dir=args.output_dir, concurrency=args.concurrency,
-                      only_attack_success=not args.include_fail)
+                      filter_mode=mode)
 
 
 if __name__ == "__main__":

@@ -939,26 +939,52 @@ def attack_single_claim(claim_id: int, poison_rate: float, attack_type: str, vic
         # Track which evidence was actually retrieved and used by the fact-checking system
         # This measures the retrievability of malicious evidence (Successful Injection Rate, SIR)
         used_evidences = meta['used_evidence']
-        used_evidence_set = set()
+        used_evidence_urls_ordered = []
+        seen_sources = set()
         
         # Extract evidence sources (URLs) from used evidence
         # DEFAME uses nested results structure, while InFact uses flat structure
         if victim != "defame":
             for evidence in used_evidences:
-                used_evidence_set.add(evidence.source)
+                source = getattr(evidence, "source", None)
+                if source and source not in seen_sources:
+                    seen_sources.add(source)
+                    used_evidence_urls_ordered.append(source)
         else:
             for evidence in used_evidences:
                 results = evidence.results
                 for result in results:
-                    used_evidence_set.add(result.source)
+                    source = getattr(result, "source", None)
+                    if source and source not in seen_sources:
+                        seen_sources.add(source)
+                        used_evidence_urls_ordered.append(source)
 
-        used_evidences = list(used_evidence_set)
+        used_evidences = used_evidence_urls_ordered
         # Identify fake evidence by checking for "/created" marker in URLs
         fake_evidence = [evidence for evidence in used_evidences if 'created' in evidence]
         original_evidence = [evidence for evidence in used_evidences if 'created' not in evidence]
         num_original_urls = len(original_evidence)
         num_fake_urls = len(fake_evidence)
         num_used_evidence_urls = len(used_evidences)
+
+        # Ranking-based retrieval diagnostics:
+        # first_fake_rank answers "how early fake evidence appears".
+        first_fake_rank = None
+        first_original_rank = None
+        for idx, evidence_url in enumerate(used_evidences):
+            rank = idx + 1
+            is_fake = "created" in evidence_url
+            if is_fake and first_fake_rank is None:
+                first_fake_rank = rank
+            if (not is_fake) and first_original_rank is None:
+                first_original_rank = rank
+            if first_fake_rank is not None and first_original_rank is not None:
+                break
+        fake_before_original = (
+            first_fake_rank is not None
+            and first_original_rank is not None
+            and first_fake_rank < first_original_rank
+        )
         
         # Successful Injection Rate (SIR): proportion of retrieved malicious evidence
         fake_evidence_usage_rate = num_fake_urls / num_used_evidence_urls if num_used_evidence_urls > 0 else 0
@@ -1006,6 +1032,10 @@ def attack_single_claim(claim_id: int, poison_rate: float, attack_type: str, vic
             "total_used_evidence": int(num_used_evidence_urls),
             "fake_evidence_usage_rate": float(fake_evidence_usage_rate),
             "fake_evidence_proportion": float(fake_evidence_proportion),
+            "used_evidence_urls_ordered": used_evidences,
+            "first_fake_rank": int(first_fake_rank) if first_fake_rank is not None else None,
+            "first_original_rank": int(first_original_rank) if first_original_rank is not None else None,
+            "fake_before_original": bool(fake_before_original),
 
         }
         
