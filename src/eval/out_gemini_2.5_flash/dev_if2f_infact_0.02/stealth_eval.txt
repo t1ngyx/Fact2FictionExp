@@ -1,0 +1,25 @@
+========================================================================
+  Attack Stealth Evaluation Report
+  Model: Sentence-BERT (all-mpnet-base-v2)
+========================================================================
+
+  Total claims evaluated: 277
+  Attack success (label flipped): 51
+  Fact-check fail (wrong/NEI): 111
+
+  [Overall Semantic Similarity]
+    Claim <-> Before-Justification:  0.8038 +/- 0.0875
+    Claim <-> After-Justification:   0.7919 +/- 0.1082
+    Before <-> After Justification:  0.8932 +/- 0.0749
+    Delta (After - Before):          -0.0118 +/- 0.0789
+
+  [By Attack Outcome -- Before <-> After Justification Similarity]
+    Attack Success  (n= 51): 0.8750
+    FC Fail Only    (n= 60): 0.8774
+    No Effect       (n=166): 0.9046
+
+  Interpretation:
+    * Higher Before<->After sim = more stealthy (less justification drift)
+    * Delta close to 0 = claim-justification alignment preserved
+    * Compare across outcomes to see if successful attacks are detectable
+========================================================================

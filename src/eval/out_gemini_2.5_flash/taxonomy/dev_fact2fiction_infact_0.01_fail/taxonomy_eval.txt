@@ -1,0 +1,31 @@
+==============================================================================
+  Attack Taxonomy Classification Report
+==============================================================================
+
+  Total classified: 37
+
+  [Dimension A: Content]
+    A1   Fact Fabrication                     25 ( 67.6%)
+    A5   Context Manipulation                  6 ( 16.2%)
+    A2   Fact Distortion                       5 ( 13.5%)
+    A4   Fabricated Data                       1 (  2.7%)
+
+  [Dimension B: Mechanism]
+    B1   Evidence Monopolization              21 ( 56.8%)
+    B2   Evidence Contamination                7 ( 18.9%)
+    B4   Key Evidence Displacement             7 ( 18.9%)
+    B3   Reasoning Chain Reconstruction        2 (  5.4%)
+
+  [Dimension C: Vulnerability]
+    C4   Insufficient Consistency Check       15 ( 40.5%)
+    C3   Missing Source Verification          12 ( 32.4%)
+    C1   Retrieval Trust Blindness             7 ( 18.9%)
+    C2   Quantity Over Quality                 3 (  8.1%)
+
+  [By Attack Type]
+    fact2fiction (n=37)
+      content:       A1 (68%)
+      mechanism:     B1 (57%)
+      vulnerability: C4 (40%)
+
+==============================================================================

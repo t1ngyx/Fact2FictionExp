@@ -1,0 +1,276 @@
+claim_id,claim_text,gt_label,pred_label,attack_success,fact_check_fail,sim_claim_before,sim_claim_after,sim_before_after,delta_sim
+0,"In a letter to Steve Jobs, Sean Connery refused to appear in an apple commercial.",refuted,supported,True,True,0.7879,0.7556,0.8634,-0.0323
+1,Trump Administration claimed songwriter Billie Eilish Is Destroying Our Country In Leaked Documents,refuted,refuted,False,False,0.8563,0.8850,0.9322,0.0287
+2,"Due to Imran Khan's criticism of Macron's comments on Islam, French authorities cancelled the visas of 183 Pakistani citizens and deported 118 from the country.",refuted,not enough information,False,True,0.9091,0.8817,0.9062,-0.0275
+3,UNESCO declared Nadar community as the most ancient race in the world.,refuted,refuted,False,False,0.7772,0.8653,0.8508,0.0882
+4,Republican Matt Gaetz was part of a company that had to pay 75 million in hospice fraud. They stole from dying people.,refuted,not enough information,False,True,0.6219,0.6648,0.9121,0.0430
+6,"More than 225,000 people dead, 225,000. The estimates are, if we��d have acted responsibly, there��d be 160,000 fewer dead than there are today, because of covid-19.",supported,refuted,True,True,0.6491,0.5622,0.7523,-0.0868
+8,You��re watching the cheaters and all those people that send in the phony ballots. �� They want to have the count weeks after November 3.,refuted,not enough information,False,True,0.6907,0.6167,0.7547,-0.0740
+12,New Zealand��s new Food Bill bans gardening,refuted,not enough information,False,True,0.9041,0.8002,0.8394,-0.1039
+16,The plentiful evidence we have indicates that masks would not meaningfully help with aerosol transmission of COVID 19.,refuted,not enough information,False,True,0.8541,0.7834,0.8486,-0.0706
+17,All USA Ballots Arriving After Election Day Will Be Thrown Out,refuted,refuted,False,False,0.6773,0.7404,0.8905,0.0631
+19,Video shows attack of French embassy in Sudan,refuted,refuted,False,False,0.8739,0.8419,0.9332,-0.0320
+20,"Viral video purportedly shows Pakistani opposition MPs chanted ��Modi, Modi�� (India's PM)  inside the Pakistani Parliament",refuted,refuted,False,False,0.8784,0.8628,0.9433,-0.0156
+22,Trash Can Plastered With 'Ballot Box' Sign In Philadelphia Was Intended To Get People To Toss Their Ballots In The Trash.,refuted,supported,True,True,0.8587,0.9057,0.9246,0.0469
+24,Germany��s Foreign Minister Heiko Maas said that Thailand��s King Maha Vajiralongkorn didn��t do anything illegal while at his German residence.,refuted,not enough information,False,True,0.8666,0.8342,0.9386,-0.0323
+25,McDonald��s Azerbaijan's official account was promoting the military taking of Nagorno-Karabakh.,supported,supported,False,False,0.8311,0.8596,0.9408,0.0285
+27,Sleeping under a mosquito bed net treated (or not treated) with insecticide is ineffective and harmful to human health.,refuted,refuted,False,False,0.8938,0.8610,0.9054,-0.0327
+28,Pogba Has Quit The French National Team Over Macron's Remarks on Islam.,refuted,refuted,False,False,0.8547,0.8400,0.9475,-0.0147
+30,"Paul Pogba, who plays for Manchester United and the French national team, retired from international football in response to French President Macron��s comments on Islamist terrorism.",refuted,refuted,False,False,0.8482,0.8291,0.9159,-0.0191
+31,"Amy Coney Barrett was confirmed as US Supreme Court Justice on October 26, 2020",supported,supported,False,False,0.9183,0.9140,0.9716,-0.0043
+35,COVID-19 pandemic pre-planned with the help from Bill Gates.,refuted,refuted,False,False,0.7552,0.7913,0.9424,0.0361
+38,"Hunter Biden, son of US President Joe Biden has died.",refuted,refuted,False,False,0.7707,0.7421,0.9192,-0.0286
+39,5G causes COVID-19.,refuted,refuted,False,False,0.8204,0.8641,0.9141,0.0438
+40,Rock musician Jon Bon Jovi performed for 12 people and 7 pumpkins at a campaign event for Democratic presidential nominee Joe Biden in Pennsylvania.,refuted,supported,True,True,0.8159,0.8628,0.9056,0.0469
+44,Deliberately infecting children to COVID-19 at ��pox parties�� could be a good way to help create herd immunity against COVID-19 without a vaccine.,refuted,refuted,False,False,0.8365,0.7321,0.8649,-0.1044
+45,Cutting the umbilical cord straight away deliberately denies the baby natural immunity so that medical professionals have a reason to vaccinate and medicate them.,refuted,refuted,False,False,0.7229,0.7571,0.9356,0.0342
+48,99% of people recover from COVID-19.,refuted,not enough information,False,True,0.8297,0.2126,0.2962,-0.6171
+51,People who do not vote for the Bharatiya Janata Party (BJP) in the 2020 elections will not get the COVID vaccine free of cost.,refuted,refuted,False,False,0.8525,0.8929,0.9277,0.0404
+52,President Ferdinand Marcos and Dr. Jose Rizal established and founded the WORLD BANK and International Monetary Fund.,refuted,refuted,False,False,0.8118,0.8326,0.9396,0.0208
+54,India��s imports from China increased by 27% in April-August 2020,refuted,not enough information,False,True,0.8388,0.8356,0.8653,-0.0032
+55,Generally the deaths from Covid-19 are still pretty flat because we've flattened the curve.,refuted,not enough information,False,True,0.8014,0.8313,0.8834,0.0299
+56,Previous flu vaccines may have made President Donald Trump susceptible to COVID-19,refuted,refuted,False,False,0.8735,0.8064,0.9132,-0.0671
+61,The large image of the Joe Biden and Kamala Harris logo projected onto a Harley-Davidson location in Milwaukee US indicates the motorcycle manufacturer's endorsement of the US Democratic presidential ,refuted,not enough information,False,True,0.8382,0.8997,0.8771,0.0616
+63,Officer who wore Trump 2020 mask to polls to face disciplinary action,supported,refuted,True,True,0.8045,0.8559,0.9314,0.0514
+64,"Eric Trump, Donald J. Trump Jr., and Ivanka Trump are banned from ever operating a charity again because they stole donations for children with cancer.",refuted,refuted,False,False,0.8690,0.8266,0.9236,-0.0423
+65,"Someone who couldn't afford health care under Barack Obama's Affordable Care Act gets penalized $10,000",refuted,refuted,False,False,0.7553,0.7006,0.8122,-0.0547
+70,Dr Anthony Fauci wrote a paper regarding the Spanish Flu and stated that the majority of deaths in 1918-1919 was because of bacterial pneumonia from wearing masks.,refuted,not enough information,False,True,0.9023,0.9088,0.9537,0.0065
+71,India's imports from China increased by 27% during the period April-August 2020.,refuted,refuted,False,False,0.8111,0.8900,0.9104,0.0789
+72,The daughter of Muahammadu Buhari (the President of Nigeria) is a board member of the Nigerian National Petroleum Corporation (NNPC).,refuted,refuted,False,False,0.8461,0.8744,0.9528,0.0283
+74,"The Iowa Farm Bureau, US says that it would no longer be endorsing US Republican Iowa Sen. Joni Ernst for her re-election",refuted,not enough information,False,True,0.8777,0.8717,0.9192,-0.0060
+77,A third of excess deaths in the United States between 1 March and  1 August 2020 during the COVID-19 pandemic could not be directly attributed to the coronavirus,supported,not enough information,False,True,0.8409,0.8872,0.9053,0.0464
+78,"Prominent US Democrat party members including Hillary and Bill Clinton, were running a child sex-trafficking ring in the basement of a Washington, D.C., pizzeria.",refuted,refuted,False,False,0.8794,0.6896,0.8328,-0.1898
+79,Anthony Weiner��s laptop contained proof Hillary Clinton & her associates are involved in child trafficking & paedophilia,refuted,not enough information,False,True,0.8226,0.6771,0.7348,-0.1454
+80,"��Red-tagging�� is a term invented by the Communist Party of the Philippines, the New People's Army, and the National Democratic Front (CPP-NPA-NDF).",refuted,refuted,False,False,0.8904,0.7571,0.7939,-0.1333
+84,It's unclear how Joe Biden acquired his recent wealth since leaving office in 2017,refuted,refuted,False,False,0.7735,0.7995,0.9321,0.0260
+85,India's Congress party candidate Maskoor Usmani installed Jinnah's portrait at AMU.,refuted,refuted,False,False,0.7816,0.7839,0.9628,0.0023
+89,"Most deaths in the 1918 influenza pandemic originated from bacterial pneumonia caused by face masks and that Dr Anthony Fauci, the US government��s top expert in the fight against Covid-19, knew about",refuted,refuted,False,False,0.8874,0.8600,0.9290,-0.0274
+90,BJP MP Kirron Kher Said,refuted,not enough information,False,True,0.7429,0.6400,0.8976,-0.1029
+91,"A message will be sent to your phone claiming to show that the Covid19 curve is flattening in India, But It will contain a malicious file",refuted,supported,True,True,0.7300,0.7861,0.8212,0.0561
+92,US Sen Kamala Harris failed the bar exam  (qualifying examination for lawyers)on her first attempt,supported,refuted,True,True,0.8289,0.7941,0.8543,-0.0348
+93,US Judge Amy Coney Barrett graduated at the top of her law school class at Notre Dame Law School,supported,not enough information,False,True,0.8775,0.8543,0.8817,-0.0233
+94,"Saved by the Bell actor, Dustin Diamond died in a prison riot.",refuted,not enough information,False,True,0.8879,0.8113,0.8642,-0.0766
+97,IMAGE CLAIMS DONALD TRUMP CURRENTLY FACES A COURT CASE FOR ALLEGEDLY SEXUALLY ASSAULTING A 13-YEAR-OLD,refuted,not enough information,False,True,0.8094,0.5387,0.4720,-0.2707
+98,The iPhone 12 won��t come with earphones and a charging adapter.,supported,supported,False,False,0.7262,0.6597,0.8982,-0.0665
+104,"Amy Coney Barrett's nomination to the Supreme Court would be confirmed in October 2020, by a Senate majority that represents 15 million fewer people than the minority party.",supported,not enough information,False,True,0.8427,0.8508,0.8747,0.0080
+106,"Amy Coney Barrett, associate justice of the Supreme Court of the United States,  said during her Supreme Court confirmation hearing that she was not using notes because she has seven kids and is used ",refuted,not enough information,False,True,0.8768,0.5548,0.5559,-0.3221
+107,Anthony Fauci the NIAID director is a democrat.,refuted,not enough information,False,True,0.8185,0.8309,0.9581,0.0125
+108,CNN announces on social media that President Donald Trump dies from COVID-19.,refuted,not enough information,False,True,0.8182,0.6780,0.7690,-0.1402
+112,The Median White Household Wealth In The US Is 81 Times that of The Black Median Household Wealth,refuted,not enough information,False,True,0.9112,0.8634,0.9419,-0.0477
+116,"Joe Biden said ��You know, we have to come together. That��s why I��m running. I��m running as a proud Democrat for the Senate. So vote! Vote!��",refuted,refuted,False,False,0.6765,0.6201,0.9553,-0.0564
+119,The PHE has began to combine Covid-19 and influenza statistics to make the numbers look worse.,refuted,not enough information,False,True,0.7240,0.1604,0.1976,-0.5636
+120,A law called The Flora and Fauna Act classified aboriginal people as animals until Australian voters overturned it in the 1960s.,refuted,not enough information,False,True,0.8651,0.6248,0.6747,-0.2403
+121,"Robert E. Lee, commander of the Confederate States Army during the American Civil War, was not a slave owner.",refuted,refuted,False,False,0.7725,0.7282,0.9578,-0.0443
+122,"A BLM or antifa activist shot and killed a patriot at a protest in Denver, Colorado on October 10, 2020.",refuted,not enough information,False,True,0.7639,0.7641,0.8892,0.0002
+123,From 8th October the UK government will combine weekly flu and covid reports.,supported,not enough information,False,True,0.8416,0.8411,0.9215,-0.0006
+124,PTFE Sprayed On Blue Masks Causes Symptoms Similar To COVID-19,refuted,refuted,False,False,0.8930,0.7382,0.9015,-0.1548
+125,The gross domestic product  (GDP) figure in Nigeria for 2020 has decreased from the figure for 2019.,supported,not enough information,False,True,0.8337,0.6712,0.7952,-0.1625
+126,"Ulysses S. Grant, commander of the Union Army during the American Civil War, was a slave owner.",supported,supported,False,False,0.8931,0.8161,0.8537,-0.0770
+128,Joe Biden proposed a US wide 2% property tax increase.,refuted,refuted,False,False,0.8603,0.7876,0.8947,-0.0727
+129,US Democratic presidential nominee Joe Biden was endorsed by Black Lives Matter and Antifa,refuted,refuted,False,False,0.9034,0.8302,0.9212,-0.0732
+130,"Kirron Kher, BJP��s Chandigarh MP, said ��Rape is part of Indian culture and tradition. We cannot stop it!��",refuted,refuted,False,False,0.8619,0.8505,0.8673,-0.0114
+131,We do not know where Covid-19 places among causes of death because the data is not published.,refuted,refuted,False,False,0.7060,0.7022,0.9617,-0.0037
+132,Swiss Squash player Ambre Allinckx��s refuses to play in India due to safety reasons,refuted,not enough information,False,True,0.8545,0.8672,0.8973,0.0126
+134,"WHO ( World Health Organization) approved water, salt and vinegar remedy for coronavirus",refuted,refuted,False,False,0.8349,0.8213,0.9172,-0.0137
+136,Forty percent of Iowa��s energy resources are from renewables.,supported,not enough information,False,True,0.8465,0.8131,0.8806,-0.0334
+137,it is unknown whether a person under 20 can pass the disease to an older adult.,refuted,not enough information,False,True,0.6962,0.5994,0.7127,-0.0968
+138,Fly swatters are now available on Joe Biden's online store.,supported,not enough information,False,True,0.7928,0.8448,0.8655,0.0521
+140,Charlotta Bass was the first Black woman to run for vice president in 1952,supported,not enough information,False,True,0.9266,0.8792,0.9437,-0.0475
+141,"China seek for court��s approval to kill the over 20,000 coronavirus patients to avoid further spread of the virus.",refuted,refuted,False,False,0.7513,0.7893,0.9160,0.0381
+145,"When Joe Biden was US vice-president they took a month to act on information that might have saved Kayla Mueller, a humanitarian worker held hostage and sexually abused by the Islamic State terrorist ",supported,refuted,True,True,0.7107,0.5989,0.8074,-0.1118
+151,The Democrats want to shut down U.S. churches permanently.,refuted,refuted,False,False,0.7940,0.7648,0.8439,-0.0292
+152,Over thirty million people... in the last several months had to file for unemployment.,supported,not enough information,False,True,0.7886,0.6851,0.8707,-0.1035
+155,Trump said 'there were fine people on both sides' in far-right protests.,supported,supported,False,False,0.8877,0.8751,0.9004,-0.0125
+157,Richard A. Rothschild filed a patent for novel coronavirus tests in 2015.,refuted,not enough information,False,True,0.8390,0.8501,0.8828,0.0111
+158,"US President Donald Trump following his positive diagnosis of COVID-19, was given treatment developed from the use of fetal tissue, made by the company Regeneron.",supported,supported,False,False,0.8220,0.9069,0.9371,0.0848
+161,Documents show the CIA made a referral to the FBI documenting the allegation that U.S. Presidential candidate Hillary Clinton had approved a campaign plan to stir up a scandal against U.S. Presidentia,supported,supported,False,False,0.8668,0.8213,0.8175,-0.0455
+162,The Democratic party has spent the last three and a half years trying to overturn the results of the last US election.,refuted,refuted,False,False,0.7392,0.6431,0.7089,-0.0960
+163,"The content of the conspiracy network, Radio Quebec, hosted by Alexis Cossette-Trudel is banned by Facebook.",supported,not enough information,False,True,0.8854,0.8849,0.9256,-0.0005
+164,OPCW scenario of the Navalny case is a fantastic story and a planned conspiracy scenario,refuted,not enough information,False,True,0.5719,0.6269,0.8895,0.0550
+165,In 1977 Senate Minority Leader Chuck Schumer had an affair with his daughter best friend from high school.,refuted,not enough information,False,True,0.8694,0.7950,0.9005,-0.0744
+167,"During the Obama/Biden administration, 18,000 people got clemency.",refuted,refuted,False,False,0.8300,0.7413,0.8520,-0.0887
+169,A Congressman Just Introduced A Bill To Remove Nancy Pelosi From The House.,refuted,refuted,False,False,0.7591,0.8093,0.7673,0.0502
+170,U.S. President Donald Trump has departed Walter Reed hospital just a few days after testing positive for COVID-19.,supported,supported,False,False,0.7957,0.8891,0.8822,0.0934
+171,All students in India who had to switch to an online mode of education due to the coronavirus pandemic are being provided free Android smartphones by the government.,refuted,not enough information,False,True,0.7986,0.5827,0.7684,-0.2158
+173,Carbon dioxide intoxication is caused by wearing face masks.,refuted,refuted,False,False,0.8428,0.8162,0.8864,-0.0266
+174,"Wearing face masks leads to permanent neurological damage, especially in children.",refuted,refuted,False,False,0.8876,0.8720,0.9121,-0.0156
+177,President Trump is not on supplemental oxygen.,refuted,supported,True,True,0.8088,0.7825,0.9437,-0.0262
+178,The PLAAF has shot down an Indian Sukhoi Su-30 fighter jet in Tibet.,refuted,not enough information,False,True,0.7490,0.6198,0.8783,-0.1292
+181,The ex-Prime Minister of India Lal Bahadur Shastri took a loan to buy a car.,supported,supported,False,False,0.8304,0.8723,0.8493,0.0420
+182,President Trump announces  he has tested positive for Covid-19.,supported,supported,False,False,0.8295,0.8313,0.9356,0.0017
+184,The wife of  Lal Bahadur Shastri (ex Prime minister of India) repaid his car loan after his death.,supported,not enough information,False,True,0.7223,0.8949,0.7709,0.1726
+185,President Trump's positive COVID-19 test result is a 'con',refuted,refuted,False,False,0.8218,0.7984,0.8809,-0.0234
+187,"US President Donald Trump's positive COVID-19 result is a false positive, which could allow an adversary in the White House to poison the president��s soda and later say that he suffered from COVID-19",refuted,refuted,False,False,0.9125,0.7891,0.8531,-0.1234
+188,"The Democrats deliberately spread the COVID-19 virus to US President Donald Trump  during the first  US presidential debate on Sept. 29, 2020.",refuted,not enough information,False,True,0.8601,0.7124,0.8513,-0.1477
+189,During a speech on 2nd October 2020 Joe Biden said he would create 550 million new jobs.,refuted,refuted,False,False,0.9131,0.8683,0.9230,-0.0448
+190,US President Donald Trump used a fabricated COVID-19 positive diagnosis to benefit his re election campaign.,refuted,not enough information,False,True,0.7972,0.5082,0.5887,-0.2890
+194,"At independence, Nigeria had a population of 45 million",supported,refuted,True,True,0.8663,0.8649,0.9079,-0.0014
+198,"Today, Nigeria grapple has a population exceeding 200 million.",supported,not enough information,False,True,0.8081,0.7984,0.9173,-0.0097
+199,"For a cumulative 29 of Nigeria's 60 years of existence as a nation, Nigeria has been under military rule.",supported,not enough information,False,True,0.8040,0.8520,0.8918,0.0481
+200,Other Countries Have Proved that the U.S. FDA Was Wrong to Withdraw Approval Of Hydroxychloroquine as COVID Drug,refuted,refuted,False,False,0.8535,0.8566,0.9320,0.0030
+201,"U.S. President Donald Trump and his wife, First Lady Melania Trump, have tested positive for COVID-19",supported,supported,False,False,0.9249,0.9170,0.9583,-0.0079
+207,"At independence, Nigeria had a population of 45 million.",supported,not enough information,False,True,0.8404,0.8590,0.9365,0.0186
+211,"At independence, Nigeria had a population of 45 million.",supported,not enough information,False,True,0.8335,0.7901,0.9579,-0.0434
+212,"For a cumulative 29 of our 60 years of existence as a nation, we have been under military rule.",supported,supported,False,False,0.5293,0.4445,0.9371,-0.0848
+213,"For a cumulative 29 of Nigeria's 60 years of existence as a nation, they have been under military rule",supported,not enough information,False,True,0.8180,0.9056,0.9117,0.0877
+215,52% of Nigeria��s current population lives in urban areas.,supported,not enough information,False,True,0.8393,0.7576,0.8077,-0.0817
+217,Nigeria's current population exceeds 200 million.,supported,not enough information,False,True,0.7003,0.5735,0.8397,-0.1268
+218,52% of Nigeria��s current population lives in urban areas.,supported,not enough information,False,True,0.8005,0.8317,0.8821,0.0312
+219,"For a cumulative 29 of Nigeria's 60 years of existence as a nation, it has been under military rule.��",supported,supported,False,False,0.8624,0.8569,0.9289,-0.0055
+222,"Today, Nigeria grapples with multiple challenges with a population exceeding 200 million.",supported,supported,False,False,0.7761,0.7533,0.9233,-0.0229
+227,Hindus are a minority in Kerala.,refuted,not enough information,False,True,0.8250,0.7526,0.7444,-0.0725
+230,"Judith Collins said, on Donald Trump,",refuted,refuted,False,False,0.5545,0.7776,0.7158,0.2231
+232,"Uttar Pradesh Chief Minister Yogi Adityanath said ��our job is to save cows, not women.��",refuted,not enough information,False,True,0.7646,0.6880,0.9082,-0.0766
+234,Kamala Harris called Joe Biden Trash.,refuted,not enough information,False,True,0.8516,0.6936,0.8159,-0.1580
+236,"Covid 19 Will Go Away If You Stop Getting Tested, It's Just The Elderly Dying and People Are Being Intentionally Infected",refuted,refuted,False,False,0.7505,0.7205,0.8228,-0.0300
+239,"Judith Collins, the National Party leader stated that New Zealand was using more coal to generate electricity because of the oil and gas exploration ban.",refuted,refuted,False,False,0.7483,0.8076,0.8762,0.0593
+240,Democratic presidential nominee Joe Biden received the questions for the first presidential debate in advance.,refuted,not enough information,False,True,0.8311,0.7237,0.8142,-0.1074
+242,"U.S. Centers for Disease Control and Prevention downgrades COVID-19, rating it less fatal than seasonal flu",refuted,supported,True,True,0.8064,0.7923,0.8940,-0.0141
+243,Eating millets will protect you from Coronavirus.,refuted,not enough information,False,True,0.8343,0.8232,0.8735,-0.0111
+249,AARP endorsed President Biden and gave financial support to planned parenthood.,refuted,refuted,False,False,0.8189,0.7899,0.8683,-0.0291
+250,"Indian legendary singer Sripathi Panditaradhyula Balasubrahmanyam's family asked the Tamil Nadu government for help to pay the hospital bills after his death, but it was  Vice President Venkaiah Naidu",refuted,not enough information,False,True,0.8128,0.7429,0.7769,-0.0699
+253,The Nigerian government is donating $600 million to Democratic presidential nominee Joe Biden��s campaign.,refuted,not enough information,False,True,0.8036,0.7099,0.8939,-0.0936
+254,Olive Garden prohibits its employees from wearing face masks depicting the American flag.,refuted,supported,True,True,0.7119,0.7186,0.9133,0.0067
+255,"Amy Coney Barrett has a written track record, disagreeing adamantly with the U.S. Supreme Court��s decision to uphold the Affordable Care Act.",supported,supported,False,False,0.9042,0.9052,0.9510,0.0009
+257,A Maryland man was sentenced to a year in jail for throwing parties.,supported,supported,False,False,0.4908,0.5806,0.7047,0.0897
+258,A Supreme Court nominee has never been nominated and installed while a presidential election is already underway.,refuted,not enough information,False,True,0.7016,0.6255,0.8074,-0.0761
+261,Distance between Gandhi and Green thread can determine if Rs 500 note is genuine or fake,refuted,refuted,False,False,0.7365,0.7829,0.8764,0.0465
+262,Nigeria performed poorly in Sustainable Development Goals (SDGs) in the past five years.,supported,not enough information,False,True,0.8134,0.7881,0.8716,-0.0252
+263,"No news coverage was given to US President Donald Trump's executive order on September 24, 2020 guaranteed health coverage protections for those with preexisting conditions.",refuted,not enough information,False,True,0.9220,0.8855,0.9135,-0.0365
+264,Donald Trump has not appoointed any black federal judges.,refuted,not enough information,False,True,0.7238,0.6924,0.8414,-0.0314
+265,A mail-in ballot application for voting in the US presidential election which was sent to a deceased grandfather in the State of New Mexico is evidence of potential widespread voter fraud via mail-in ,refuted,supported,True,True,0.8752,0.7953,0.8215,-0.0799
+266,Raveer Singh requested Narcotics Control Bureau (NCB) to let him join anxiety-prone Actor Deepika Padukone during drug interrogation.,refuted,supported,True,True,0.7371,0.7643,0.9208,0.0272
+268,"US President Donald Trump's executive order on September 24, 2020 legally ensures health coverage protections for those with pre existing medical conditions.",refuted,not enough information,False,True,0.8892,0.9247,0.8909,0.0355
+274,Adani Logistics Limited has established a food silo in the aftermath of the three farm and agriculture-related bills passing Parliament.,refuted,not enough information,False,True,0.7232,0.7104,0.8747,-0.0128
+276,"Due to coronavirus schools and colleges have been closed and because of this, the education of students has been affected. The government is providing free laptops to all the students so that they can",refuted,not enough information,False,True,0.7723,0.7406,0.9251,-0.0317
+277,New York City Mayor Bill de Blasio officially ordered all police and citizens to stop sharing the booking photo of his daughter caught up during rioting,refuted,not enough information,False,True,0.8803,0.7569,0.8466,-0.1233
+278,The Victorian Premier Daniel Andrews of the state of Victoria in Australia accepted a multi-million dollar bribe from the IMF conditional on Andrews locking down the state of Victoria unnecessarily du,refuted,refuted,False,False,0.7536,0.7549,0.8833,0.0013
+279,Premier Daniel Andrews of the state of Victoria in Australia borrowed money from the IMF and now is in default.,refuted,refuted,False,False,0.8235,0.7391,0.8206,-0.0845
+280,False positives and rapid tests put the rate of infection near zero and that there will be no second wave of infections,refuted,refuted,False,False,0.6525,0.4138,0.6825,-0.2387
+281,Americans advised to reconsider travel to Ghana due to COVID-19.,supported,not enough information,False,True,0.9002,0.8991,0.9441,-0.0011
+284,Former US vice-president Joe Biden is showing pretty severe signs of dementia.,refuted,refuted,False,False,0.8115,0.8336,0.9024,0.0222
+286,U.S. Supreme Court Justice Ruth Bader Ginsburg is the first woman in American history to lie in state at the U.S. Capitol.,supported,supported,False,False,0.8481,0.8507,0.9540,0.0026
+289,"Fact Check: WHO has not approved home remedy for COVID-19, don��t fall for misinformation",supported,supported,False,False,0.7993,0.8695,0.8851,0.0702
+290,Basketball superstar Michael Jordan is joining NASCAR as a team owner.,supported,supported,False,False,0.8004,0.8585,0.9371,0.0580
+291,Ruth Bader Ginsburg waged an,refuted,not enough information,False,True,0.5781,0.5853,0.9163,0.0072
+293,The recently deceased US Supreme Court Justice Ruth Bader Ginsburg was known for her gruelling fitness regime.,supported,supported,False,False,0.8672,0.8971,0.9210,0.0300
+294,The Trump campaign only asked that Biden to release his list of potential Supreme Court nominees after Justice Ruth Bader Ginsburg passed away.,refuted,refuted,False,False,0.8799,0.8353,0.9457,-0.0447
+295,Trump campaign asked Joe Biden to release a list of potential Supreme Court picks only after Ginsburg��s passing,refuted,refuted,False,False,0.8612,0.8677,0.9475,0.0065
+296,The family or Justine Damond received a $55 million settlement after she was gunned down by a Minneapolis police officer.,refuted,refuted,False,False,0.7843,0.7628,0.9413,-0.0216
+298,MPs are not following workplace Covid guidance by wearing masks.,refuted,not enough information,False,True,0.6984,0.7388,0.7083,0.0404
+299,You could text RBG to 50409 to sign a petition to tell your senator not to replace Ruth Bader Ginsberg in the Supreme court until after the 2020 election,supported,not enough information,False,True,0.6030,0.6765,0.8529,0.0734
+301,Melissa Francis is married to Wray Thorn.,supported,supported,False,False,0.8966,0.8539,0.8635,-0.0427
+302,Two Sigma Investments is owned by George Soros.,refuted,refuted,False,False,0.8843,0.8743,0.9238,-0.0100
+304,Zimbabwe recorded its first coronavirus Infection before 20 February 2020.,refuted,refuted,False,False,0.8860,0.8280,0.8559,-0.0580
+305,"Photo Showing the remains of Vladimir Komarov, a man who fell from space, in 1967.",supported,refuted,True,True,0.6958,0.7331,0.8255,0.0373
+307,Ruth Bader Ginsburg was nominated and confirmed 43 days before an election.,refuted,not enough information,False,True,0.8257,0.8147,0.9185,-0.0111
+308,Sightway Capital is owned by Two Sigma Investments.,supported,supported,False,False,0.8983,0.9076,0.9341,0.0093
+309,"US Supreme Court Justice, Ruth Bader Ginsburg, fought cancer for decades before she passed away in September 2020.",supported,not enough information,False,True,0.9158,0.8921,0.9513,-0.0238
+311,"Supreme Court Justice Ruth Bader Ginsburg said, ��Pedophilia is good for the children.��",refuted,refuted,False,False,0.8202,0.8635,0.8913,0.0433
+313,"English Playwright William Shakespeare��s plays are the work of Amelia Bassano, a black woman who died unpublished and in poverty.",refuted,not enough information,False,True,0.8716,0.7572,0.8553,-0.1144
+314,The passing of Ruth Bader Ginsburg will have a profound effect on the future of the Supreme Court of America.,supported,not enough information,False,True,0.8478,0.6796,0.6471,-0.1682
+315,The fastest Supreme Court justice ever confirmed in the U.S. was 47 days.,refuted,not enough information,False,True,0.9331,0.7821,0.7635,-0.1510
+316,Canada would like to reopen the border with the U.S,refuted,supported,True,True,0.7338,0.8107,0.8350,0.0769
+317,Turkish-backed armed groups did not commit human rights violations in the Syrian conflict,refuted,refuted,False,False,0.7816,0.8385,0.8816,0.0568
+318,Joe Biden would be the first person without an Ivy League degree to be elected president.,refuted,refuted,False,False,0.8183,0.7831,0.9232,-0.0352
+319,Nigeria is the leading producer of cassava in Africa and the world.,supported,refuted,True,True,0.9000,0.7854,0.7644,-0.1145
+320,The White House blocked a plan to send facemasks to every household in April 2020.,supported,refuted,True,True,0.8545,0.8881,0.8732,0.0336
+322,Trump nixes aid for California fires but offers help to Putin for Siberian wildfires.,refuted,refuted,False,False,0.7421,0.8270,0.8937,0.0849
+323,"Donald Trump is in federal court trying to do away with the Affordable Care Act, 100 million people with preexisting conditions like your mom would not have to pay more for their insurance under now.�",supported,not enough information,False,True,0.6948,0.6683,0.9179,-0.0266
+326,COVID-19 was developed as a bioweapon from a research facility in China.,refuted,refuted,False,False,0.8230,0.8056,0.8773,-0.0174
+327,Carlos Gimenez approved a 67% pay raise for himself and increased his own pension.,supported,not enough information,False,True,0.6844,0.7178,0.7539,0.0334
+332,"Kim Martin Morrow the CEO of Netflix has just been charged with 15 charges for child pornography and 31,000 files have been found on his personal computers for child porn from ages 8 and as young as t",refuted,refuted,False,False,0.8560,0.7040,0.8161,-0.1521
+334,The US government has plans to force a COVID-19 vaccine on everyone.,refuted,refuted,False,False,0.8121,0.7722,0.8564,-0.0399
+336,A US voter can vote 4 times because he got 4 vote by mail forms.,refuted,refuted,False,False,0.8199,0.7551,0.8597,-0.0648
+338,"A Democratic Vice Presidential nominee, Kamala Harris, said that there will be",refuted,refuted,False,False,0.5525,0.4931,0.9319,-0.0594
+339,Actor Mukesh Khanna has called for a boycott of Jaya and Amitabh Bachchan.,refuted,not enough information,False,True,0.8590,0.6887,0.8468,-0.1703
+340,A 6 year old boy begged God to save his mother's life after she was ambushed. Today the NFL honored the organization that yelled,refuted,refuted,False,False,0.6764,0.5455,0.7149,-0.1310
+341,Muslim regiment of the Indian Army had refused to fight in India��s 1965 war with Pakistan.,refuted,refuted,False,False,0.8171,0.8361,0.8426,0.0190
+343,McDonald��s take down American flags at their fast-food restaurants in support of Black Lives Matter and antifa (an umbrella term for far-left anti-fascism groups).,refuted,not enough information,False,True,0.8445,0.7670,0.8821,-0.0775
+345,"The Indian UPSC examination is discriminatory in favour of Muslim candidates.(Sudarshan News Editor-in-Chief, Suresh Chavhanke, 11 September, 2020, UPSC Jihad Par Ab Tak Ka Sabse Bada Khulasa (The Big",refuted,refuted,False,False,0.7831,0.8714,0.8562,0.0883
+348,Wildfires do not Affect Mexico And Canada,refuted,refuted,False,False,0.6937,0.7888,0.8297,0.0951
+349,Former FBI Director James Comey and former CIA Director John Brennan have been charged with multiple counts of treason.,refuted,not enough information,False,True,0.7537,0.5168,0.6795,-0.2369
+351,"Donald Trump tweeted that he was donating $500,000 each toward the expenses of the two Los Angeles County sheriff's deputies who were shot and critically injured on September 12, 2020.",refuted,supported,True,True,0.7896,0.7459,0.9319,-0.0438
+355,"Ignat Shchetinin And Sammy Scott Piatt, charged with arson connected to Clackamas County, Oregon wildfires.",refuted,supported,True,True,0.6956,0.9114,0.8257,0.2158
+357,Edo State in Nigeria has a 19% unemployment rate.,supported,supported,False,False,0.8729,0.8535,0.9478,-0.0193
+358,Antifa is recruiting people to dress as President Trump supporters and police to riot on Election Day 2020 in the United States,refuted,refuted,False,False,0.7359,0.7882,0.8909,0.0523
+359,Netflix tweets that its content is,refuted,supported,True,True,0.6450,0.5731,0.8287,-0.0719
+362,Netflix CEO Reed Hastings was arrested by the FBI on child porn charges.,refuted,not enough information,False,True,0.9051,0.8276,0.9182,-0.0775
+363,Antifa Admit to Igniting Fires All Over The Country To Draw Attention To Climate Change,refuted,not enough information,False,True,0.8778,0.8820,0.9143,0.0041
+364,"Netflix CEO Reed Hastings was arrested by the FBI after being caught with 13,000 files of child pornography.",refuted,not enough information,False,True,0.8906,0.7649,0.8792,-0.1256
+365,"The eligibility criteria for applying to take the exam for the Union Public Service Commission (UPSC) of India, differentiates depending on whether you are a Hindu or a Muslim.",refuted,refuted,False,False,0.7346,0.8542,0.8324,0.1195
+367,Muslim candidates are allowed more attempts at the UPCS (i.e. Union Public Service Commission for recruitment to higher Civil Services of the Government of India) exam than others,refuted,not enough information,False,True,0.8382,0.1806,0.2153,-0.6576
+368,Muslim candidates can qualify with lower marks than others in the UPCS (i.e. Union Public Service Commission for recruitment to higher Civil Services of the Government of India) exam,refuted,refuted,False,False,0.8228,0.8195,0.8624,-0.0032
+369,CDC announces that ordinary (non-N95) masks (which most people are wearing) will do nothing to protect you against wildfire smoke because they do not catch small particles,supported,refuted,True,True,0.9340,0.9396,0.9373,0.0056
+371,The upper age-limit for Muslim candidates for the UPCS (i.e. Union Public Service Commission for recruitment to higher Civil Services of the Government of India) exam is relaxed to be higher than that,refuted,not enough information,False,True,0.8937,0.8344,0.8600,-0.0593
+373,"the Indian Government set up 5 coaching centres for UPSC exams, 4 of which were in Muslim universities.",refuted,not enough information,False,True,0.8001,0.8843,0.8723,0.0841
+374,Police: Political Activists Didn��t Cause Oregon��s Wildfires,supported,not enough information,False,True,0.8485,0.9100,0.9186,0.0615
+376,Clinical trials of a vaccine against COVID-19 were paused,supported,supported,False,False,0.8032,0.8848,0.8021,0.0817
+377,Western Wildfires Are evidence Of A Coordinated Antifa Campaign To 'Burn The Country Down,refuted,refuted,False,False,0.8316,0.8487,0.8827,0.0171
+378,Kasab was fed biriyani.,refuted,refuted,False,False,0.7524,0.7066,0.8410,-0.0458
+379,US Congress voted 49-46 to add the repeal of Section 230 �� legislation which shields online platforms from liability for user-generated content �� into the country��s annual defense bill in December ,refuted,supported,True,True,0.8970,0.8778,0.8018,-0.0192
+380,Democratic presidential nominee Joe Biden talk about how the Chevrolet Corvette is,refuted,not enough information,False,True,0.8459,0.8488,0.8968,0.0029
+382,US Democratic Vice Presidential nominee Kamala Harris tweeted that she ��filed a complaint�� to remove a specific Instagram account.,refuted,not enough information,False,True,0.8962,0.8937,0.9354,-0.0025
+384,Brazil preserves its native forests better than any other country in the world,refuted,not enough information,False,True,0.7660,0.8039,0.8396,0.0378
+385,"$400,000 ... is more money than I��ve ever made�� in a year",refuted,refuted,False,False,0.5085,0.4187,0.8754,-0.0898
+386,The CDC has removed the ��Covid-19 Pandemic�� and replaced it with ��Covid-19 Outbreak�� on their website.,refuted,not enough information,False,True,0.8079,0.8301,0.7509,0.0222
+388,"Rhea Chakrabortys father Indrajit Chakraborty said ��I Should Die, No Father Can Bear Injustice On His Daughter��.",refuted,supported,True,True,0.7723,0.8292,0.8669,0.0569
+390,"The NFL, NBA and MLB have Tax-Exempt status.",refuted,not enough information,False,True,0.7900,0.8133,0.9114,0.0232
+392,The sky has turned orange to blood red in several parts of the United States.,supported,refuted,True,True,0.7807,0.7789,0.8380,-0.0018
+395,"PGA star Bubba Watson wrote a post that says,",refuted,refuted,False,False,0.7159,0.6881,0.9402,-0.0278
+396,Photo of three officers at the Indian Police Service who belong to the same family.,refuted,refuted,False,False,0.8021,0.8628,0.8336,0.0607
+397,Wearing a face mask can cause pleurisy.,refuted,refuted,False,False,0.8452,0.8608,0.9280,0.0156
+398,The Indian government has launched an online health consultation scheme.,supported,supported,False,False,0.7364,0.8395,0.8734,0.1031
+402,Spraying of Naira notes is an offence punishable by imprisonment in Nigeria.,supported,not enough information,False,True,0.8965,0.9159,0.8870,0.0194
+403,53 Johannes Ramokhoase street Pretoria is a human trafficking hotspot.,refuted,supported,True,True,0.8541,0.8950,0.8850,0.0409
+405,Tweet shows Maharashtra Navnirman Sena (MNS) president Raj Thackeray showing their support of Bollywood actress Kangana Ranaut.,refuted,not enough information,False,True,0.9010,0.8019,0.8875,-0.0991
+406,"Willie Obiano, the Governor of Anambra State in Nigeria, procured over 100 SUVs as gifts for Anambra state traditional monarchs.",supported,refuted,True,True,0.8140,0.8615,0.8666,0.0476
+407,Donald Trump tweeted ��THE NEXT 30 TO 60 DAYS WILL BE THE BIGGEST DRAINING OF THE SWAMP EVER��,refuted,supported,True,True,0.7964,0.8767,0.7682,0.0803
+408,Mark Zuckerberg Banned Richard Jewells Defence from raising money on Facebook.,refuted,not enough information,False,True,0.8216,0.6334,0.7169,-0.1882
+409,Taiwan Shot down a Chinese SU-35 Jet.,refuted,refuted,False,False,0.7820,0.7560,0.9115,-0.0260
+410,"Maharashtra Navnirman Sena (MNS) chief Raj Thackeray has come forward in support of Bollywood actress Kangana Ranaut and would welcome her back to Mumbai, India.",refuted,supported,True,True,0.7283,0.7734,0.9053,0.0451
+411,Mark Zuckerberg and Facebook declared Richard Jewell to be a Mass Murderer in 1996,refuted,refuted,False,False,0.8584,0.8892,0.9324,0.0308
+412,Taiwan claimed to have brought down a Chinese Air Force Su-35 that allegedly violated its airspace over Taiwan Strait.,refuted,refuted,False,False,0.6719,0.7674,0.8379,0.0955
+415,Raj Thackeray tweeted,refuted,not enough information,False,True,0.6112,0.5724,0.6172,-0.0388
+417,"450,000 people attended the Sturgis Motorcycle Rally in South Dakota, and there were only 88 positive Covid-19 tests, so a .02% infection rate.",refuted,refuted,False,False,0.8417,0.8482,0.9095,0.0065
+418,People are trying to lower the legal age of consent to four years old in the U.S.,refuted,not enough information,False,True,0.7610,0.8026,0.9610,0.0416
+420,"Sturgis Motorcycle Rally resulted in no more positive Covid results than the rest of the state, South Dakota, average stating 88 positive tests to Sturgis Rally, 0.02% infection rate of attendees.",refuted,not enough information,False,True,0.7850,0.7535,0.9399,-0.0316
+422,Viral message claims that all Haldiram��s food products were banned in USA,refuted,refuted,False,False,0.8558,0.8445,0.9591,-0.0113
+424,Voters in North Carolina can send their Mail-in vote and then go to the polling place to vote again to check that their mail-in vote has been counted.,refuted,refuted,False,False,0.8494,0.8485,0.9779,-0.0009
+425,Fox News is unavailable in Canada because the Radio Act makes it a crime to lie to the public via airwaves.,refuted,refuted,False,False,0.9026,0.8374,0.9400,-0.0652
+426,"""Jihadists",refuted,refuted,False,False,0.3806,0.3488,0.9363,-0.0319
+430,"US President Trump opened a complaint platform to report censorship on Facebook, Twitter and YouTube.",supported,not enough information,False,True,0.7866,0.8192,0.7830,0.0326
+431,"US President Trump issued an executive order for the White House to take over all electrical grids, which will include internet servers, broadcasting systems and electronic systems",refuted,not enough information,False,True,0.8902,0.9355,0.9098,0.0453
+432,"US President Trump canceled the Democrats�� HR6666 bill, known as the COVID-19 TRACE Act.",refuted,refuted,False,False,0.8368,0.8709,0.8619,0.0341
+433,US President Trump canceled Bill Gates�� project known as ID2020,refuted,refuted,False,False,0.7966,0.8157,0.8223,0.0191
+434,US President Trump issued an executive order to reopen states in lockdown during COVID-19 pandemic; governors who refuse will be sued,refuted,not enough information,False,True,0.8680,0.8160,0.7741,-0.0521
+436,The US military will check purity and distribute COVID-19 vaccines in US.,refuted,supported,True,True,0.7960,0.7567,0.8912,-0.0392
+442,Bill Gates was involved in crafting the TRACE Act.,refuted,supported,True,True,0.6776,0.8866,0.7324,0.2090
+443,It's NOT a SECOND WAVE of COVID-19 coming soon. It's the NORMAL COLD / FLU SEASON,refuted,refuted,False,False,0.7543,0.8160,0.8673,0.0617
+444,The World Health Organization (WHO) says there is no proof that face masks protect against Covid-19.,refuted,not enough information,False,True,0.7523,0.9139,0.7766,0.1616
+445,Masks lower immune systems.,refuted,refuted,False,False,0.7367,0.6848,0.8319,-0.0519
+446,"US President Trump made vaccines voluntary, not mandatory, in the US.",refuted,refuted,False,False,0.8701,0.8527,0.9528,-0.0174
+449,Some US mayors are fining people for going to church during the COVID-19 pandemic.,supported,refuted,True,True,0.7473,0.8557,0.7923,0.1084
+450,US President Trump declared places of worship as essential services during COVID-19 pandemic.,supported,supported,False,False,0.8974,0.9295,0.9073,0.0321
+451,PEDOPHILIA is now LEGAL in CALIFORNIA,refuted,refuted,False,False,0.8602,0.8319,0.9077,-0.0283
+452,"Republican Maine Sen. Susan Collins said of President Donald Trump, ��Yes, I said that I wouldn��t endorse him but that doesn��t mean I don��t fully support him.��",refuted,not enough information,False,True,0.8971,0.8497,0.9339,-0.0474
+453,US President Trump instructed his administration to halt funding of the World Health Organization while a review was conducted to assess the World Health Organization��s role regarding the spread of c,supported,refuted,True,True,0.9017,0.8549,0.9249,-0.0467
+456,idol of goddess Kali was burnt in West bengals Murshidabad by the muslim community.,refuted,not enough information,False,True,0.8798,0.7597,0.9015,-0.1201
+461,All India Institute of Medical Sciences Nursing Officer Recruitment Common Eligibility Test 2020 was postponed.,supported,supported,False,False,0.9242,0.8918,0.9460,-0.0324
+462,US cable news channel Fox News is not available in Canada due to media legislation in the country.,refuted,not enough information,False,True,0.8315,0.8167,0.7751,-0.0149
+464,The number of North American bison has been reduced to only twenty-seven individuals due to colonizers.,refuted,supported,True,True,0.8173,0.8088,0.8712,-0.0085
+465,Jacob Blake raped a 14 year old teenage girl.,refuted,refuted,False,False,0.8552,0.8336,0.9327,-0.0216
+466,Amber Alert Issued For License Plate Q72B381,refuted,supported,True,True,0.8301,0.8481,0.8036,0.0180
+468,"Even with a voter ID card, you won��t be allowed to vote in Ghana on December 7 if your name is not found in the Register. So, people should take advantage of the exhibition exercise to verify their n",supported,supported,False,False,0.8839,0.9078,0.8908,0.0239
+469,"A crowdfunding campaign on the Christian site GiveSendGo solicited donations to help Kyle Rittenhouse, a 17-year-old accused of killing two people at a protest in Kenosha, Wisconsin.",supported,supported,False,False,0.9224,0.8705,0.9218,-0.0519
+470,Islamic study is a subject in UPSC exam,refuted,supported,True,True,0.8474,0.7735,0.8880,-0.0738
+471,The Trump RNC Acceptance Speech Was The First Time The White House Was Used For 'Purely Political Campaign Event',refuted,refuted,False,False,0.8021,0.8453,0.8013,0.0432
+473,Donald Trump says Biden,refuted,supported,True,True,0.5284,0.4673,0.9111,-0.0610
+474,"George Floyd died of drug overdose, not US police brutality",refuted,refuted,False,False,0.7519,0.8361,0.8378,0.0843
+476,"Biden has promised to abolish the production of American oil, coal, shale, and natural gas.",refuted,not enough information,False,True,0.7990,0.5269,0.6340,-0.2721
+477,"Joe Biden had not condemned the violence and looting during protests in Kenosha, Wisconsin by 27th August 2020",refuted,refuted,False,False,0.8220,0.8752,0.9043,0.0532
+490,EU Trade Commissioner resigned after being accused of violating COVID-19 health rules in Ireland,supported,supported,False,False,0.7065,0.7191,0.9757,0.0126
+492,"Where President Donald Trump achieved energy independence for the United States, Joe Biden would abolish fossil fuels and end fracking.",refuted,refuted,False,False,0.8372,0.8347,0.9133,-0.0026
+493,"Before the first case of the coronavirus spread within the United States, the president Donald Trump took unprecedented action and suspended all travel from China.",refuted,refuted,False,False,0.8724,0.9039,0.9202,0.0315
+494,The Obama-Biden administration secretly launched a surveillance operation on the Trump campaign.,refuted,supported,True,True,0.7027,0.7518,0.8135,0.0492
+499,The first night of the US Republican National Convention had 128.4 million viewers,refuted,not enough information,False,True,0.8103,0.8049,0.8873,-0.0054

@@ -1,0 +1,4 @@
+=== Retrieval Priority Eval: dev_naive_infact_0.08_all ===
+Total records: 277
+Missing rank count: 277
+Error: No rank information found. Please regenerate attack results with `used_evidence_urls_ordered` / `first_fake_rank` fields.

@@ -92,6 +92,28 @@ def get_model_cache_suffix(fact_checker_model: str, attacker_model: str, attack_
         else:
             return f"_att-{norm_attacker}" 
 
+def get_attack_cache_key(attack_type: str, **kwargs) -> str:
+    """
+    Build a unified attack cache key used by both cache lookup and cache save.
+    """
+    cache_attack_type = attack_type
+    if attack_type in ["fact2fiction", "if2f"]:
+        if not kwargs.get("concat_query", True):
+            cache_attack_type += "_no_query"
+        if not kwargs.get("weighted", True):
+            cache_attack_type += "_no_weighted"
+        if not kwargs.get("use_justification", True):
+            cache_attack_type += "_no_justification"
+        if attack_type == "if2f":
+            if not kwargs.get("enable_prune", True):
+                cache_attack_type += "_no_prune"
+            prune_method = kwargs.get("prune_method", "hybrid")
+            cache_attack_type += f"_{prune_method}"
+            if prune_method == "hybrid":
+                bmrate = kwargs.get("bmrate", 0.7)
+                cache_attack_type += f"_bm{bmrate:.2f}"
+    return cache_attack_type
+
 # Set embedding model suffix based on configuration
 if embedding_model == "Alibaba-NLP/gte-base-en-v1.5":
     embed_suffix = ""
@@ -154,7 +176,7 @@ def reset_kb_cache():
     """Reset KB cache, mainly for testing."""
     _kb_manager.clear_cache()
 
-def add_fake_evidence_to_kb(kb: KnowledgeBase, claim_id: int, fake_evidences: list[dict], attack_type: str, exp_dirs: dict, logger, attacker_model: str, fact_checker_model: str):
+def add_fake_evidence_to_kb(kb: KnowledgeBase, claim_id: int, fake_evidences: list[dict], attack_type: str, exp_dirs: dict, logger, attacker_model: str, fact_checker_model: str, **kwargs):
     """
     Add fake evidence to specified claim and retrain its KNN model.
     
@@ -180,9 +202,10 @@ def add_fake_evidence_to_kb(kb: KnowledgeBase, claim_id: int, fake_evidences: li
     os.makedirs(resources_dir, exist_ok=True)
     
     num_fake_evidences = len(fake_evidences)
+    cache_attack_type = get_attack_cache_key(attack_type, **kwargs)
     model_cache_suffix = get_model_cache_suffix(fact_checker_model, attacker_model, attack_type)
-    temp_knns_path = os.path.join(knns_dir, f"{claim_id}_{num_fake_evidences}_{attack_type}_knns{embed_suffix}{model_cache_suffix}.pkl")
-    temp_resources_path = os.path.join(resources_dir, f"{claim_id}_{num_fake_evidences}_{attack_type}_resources{model_cache_suffix}.pkl")
+    temp_knns_path = os.path.join(knns_dir, f"{claim_id}_{num_fake_evidences}_{cache_attack_type}_knns{embed_suffix}{model_cache_suffix}.pkl")
+    temp_resources_path = os.path.join(resources_dir, f"{claim_id}_{num_fake_evidences}_{cache_attack_type}_resources{model_cache_suffix}.pkl")
     
     # Clear cache to ensure we get new data next time
     kb.cached_resources = None
@@ -191,23 +214,54 @@ def add_fake_evidence_to_kb(kb: KnowledgeBase, claim_id: int, fake_evidences: li
     
     logger.info(f"Original evidence: {len(resources)} items, fake evidence: {len(fake_evidences)} items")
 
-    # Load or generate original evidence embeddings
-    embedding_cache_path = os.path.join(attack_cache_dir, f"{claim_id}_original_embeddings{embed_suffix}{model_cache_suffix}.pkl")
-    if os.path.exists(embedding_cache_path):
-        with open(embedding_cache_path, "rb") as f:
+    # Load or generate original evidence embeddings.
+    # Original evidence is independent of attacker/fc model, so use a shared cache key.
+    # Keep backward compatibility by falling back to legacy model-specific cache names.
+    shared_embedding_cache_path = os.path.join(
+        attack_cache_dir, f"{claim_id}_original_embeddings{embed_suffix}.pkl"
+    )
+    legacy_embedding_cache_path = os.path.join(
+        attack_cache_dir, f"{claim_id}_original_embeddings{embed_suffix}{model_cache_suffix}.pkl"
+    )
+    if os.path.exists(shared_embedding_cache_path):
+        with open(shared_embedding_cache_path, "rb") as f:
             original_embeddings = pickle.load(f)
-        logger.info(f"Loaded original evidence embeddings cache from {embedding_cache_path}")
-    else:
-        # Filter out None and empty strings to avoid embedding errors
-        valid_texts = [resource["url2text"] for resource in resources if resource["url2text"] and resource["url2text"].strip()]
-        if valid_texts:
-            original_embeddings = kb._embed_many(valid_texts)
-        else:
-            original_embeddings = np.array([]) # Handle empty case
-            
-        with open(embedding_cache_path, "wb") as f:
+        logger.info(f"Loaded shared original evidence embeddings cache from {shared_embedding_cache_path}")
+    elif legacy_embedding_cache_path != shared_embedding_cache_path and os.path.exists(legacy_embedding_cache_path):
+        with open(legacy_embedding_cache_path, "rb") as f:
+            original_embeddings = pickle.load(f)
+        logger.info(f"Loaded legacy original evidence embeddings cache from {legacy_embedding_cache_path}")
+        with open(shared_embedding_cache_path, "wb") as f:
             pickle.dump(original_embeddings, f)
-        logger.info(f"Saved original evidence embeddings cache to {embedding_cache_path}")
+        logger.info(f"Promoted legacy cache to shared path: {shared_embedding_cache_path}")
+    else:
+        # Search for ANY legacy embedding file for this claim (original embeddings are model-independent)
+        any_legacy_found = False
+        embedding_prefix = f"{claim_id}_original_embeddings{embed_suffix}"
+        try:
+            for fname in os.listdir(attack_cache_dir):
+                if fname.startswith(embedding_prefix) and fname.endswith(".pkl"):
+                    any_legacy_path = os.path.join(attack_cache_dir, fname)
+                    with open(any_legacy_path, "rb") as f:
+                        original_embeddings = pickle.load(f)
+                    logger.info(f"Loaded original embeddings from alternate legacy cache: {any_legacy_path}")
+                    with open(shared_embedding_cache_path, "wb") as f:
+                        pickle.dump(original_embeddings, f)
+                    logger.info(f"Promoted to shared path: {shared_embedding_cache_path}")
+                    any_legacy_found = True
+                    break
+        except Exception as e:
+            logger.warning(f"Error searching for alternate legacy embedding cache: {e}")
+
+        if not any_legacy_found:
+            valid_texts = [resource["url2text"] for resource in resources if resource["url2text"] and resource["url2text"].strip()]
+            if valid_texts:
+                original_embeddings = kb._embed_many(valid_texts)
+            else:
+                original_embeddings = np.array([])
+            with open(shared_embedding_cache_path, "wb") as f:
+                pickle.dump(original_embeddings, f)
+            logger.info(f"Saved shared original evidence embeddings cache to {shared_embedding_cache_path}")
 
     # Maintain the same order as old version: original evidence first, fake evidence last
     all_resources = resources + fake_evidences
@@ -341,23 +395,8 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
     os.makedirs(knns_dir, exist_ok=True)
     os.makedirs(resources_dir, exist_ok=True)
 
-    # Construct cache key based on ablation parameters
-    cache_attack_type = attack_type
-    if attack_type == "fact2fiction" or attack_type == "if2f":
-        if not kwargs.get("concat_query", True):
-            cache_attack_type += "_no_query"
-        if not kwargs.get("weighted", True):
-            cache_attack_type += "_no_weighted"
-        if not kwargs.get("use_justification", True):
-            cache_attack_type += "_no_justification"
-        if attack_type == "if2f" and not kwargs.get("enable_prune", True):
-            cache_attack_type += "_no_prune"
-        if attack_type == "if2f":
-            prune_method = kwargs.get("prune_method", "hybrid")
-            cache_attack_type += f"_{prune_method}"
-            if prune_method == "hybrid":
-                bmrate = kwargs.get("bmrate", 0.7)
-                cache_attack_type += f"_bm{bmrate:.2f}"
+    # Construct cache key based on ablation parameters (unified with add_fake_evidence_to_kb)
+    cache_attack_type = get_attack_cache_key(attack_type, **kwargs)
 
     model_cache_suffix = get_model_cache_suffix(fact_checker_model, attacker_model, attack_type)
     temp_knns_path = os.path.join(knns_dir, f"{claim_id}_{all_fake}_{cache_attack_type}_knns{embed_suffix}{model_cache_suffix}.pkl")
@@ -368,6 +407,17 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
     
     knn_exists = os.path.exists(temp_knns_path)
     resources_exists = os.path.exists(temp_resources_path)
+    
+    # Fallback to legacy cache key format (e.g. "if2f" instead of "if2f_hybrid_bm0.90")
+    if not (knn_exists and resources_exists) and cache_attack_type != attack_type:
+        legacy_knns_path = os.path.join(knns_dir, f"{claim_id}_{all_fake}_{attack_type}_knns{embed_suffix}{model_cache_suffix}.pkl")
+        legacy_resources_path = os.path.join(resources_dir, f"{claim_id}_{all_fake}_{attack_type}_resources{model_cache_suffix}.pkl")
+        if os.path.exists(legacy_knns_path) and os.path.exists(legacy_resources_path):
+            temp_knns_path = legacy_knns_path
+            temp_resources_path = legacy_resources_path
+            knn_exists = True
+            resources_exists = True
+            logger.info(f"Using legacy cache key '{attack_type}' (new key '{cache_attack_type}' not found)")
     
     logger.info(f"Exact match cache - KNN model exists: {knn_exists}, resources exist: {resources_exists}")
     
@@ -405,7 +455,10 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
     # If exact match not found, look for a cache with more fake evidence
     # We can sample the required quantity from the larger cache, avoiding regeneration
     larger_cache_found, larger_num_fake, larger_knns_path, larger_resources_path = find_larger_cache(
-        knns_dir, resources_dir, claim_id, num_fake, attack_type, logger, model_cache_suffix)
+        knns_dir, resources_dir, claim_id, num_fake, cache_attack_type, logger, model_cache_suffix)
+    if not larger_cache_found and cache_attack_type != attack_type:
+        larger_cache_found, larger_num_fake, larger_knns_path, larger_resources_path = find_larger_cache(
+            knns_dir, resources_dir, claim_id, num_fake, attack_type, logger, model_cache_suffix)
     
     if larger_cache_found:
         logger.info(f"Found larger cache: {larger_num_fake} fake evidence, will sample {num_fake} from it")
@@ -423,6 +476,40 @@ def create_poisoned_evidence(kb: KnowledgeBase, parsed_fc_report: dict, poison_r
                 logger.warning(f"Fake evidence count in larger cache ({len(larger_fake_evidences)}) is less than required count ({num_fake}), will regenerate fake evidence")
         except Exception as e:
             logger.error(f"Failed to sample from larger cache: {e}, will regenerate fake evidence")
+    
+    # ===== TIER 2.5: Same-Model Cross-Directory Search =====
+    # Search sibling experiment directories for cache from the SAME model combination.
+    # Cross-model reuse is intentionally NOT done: fake evidence content is generated
+    # by the attacker model, so reusing evidence from a different model would alter results.
+    try:
+        exp_dir_path = os.path.dirname(resources_dir)
+        out_dir = os.path.dirname(exp_dir_path)
+        current_exp_name = os.path.basename(exp_dir_path)
+
+        cache_types_to_try = [cache_attack_type]
+        if cache_attack_type != attack_type:
+            cache_types_to_try.append(attack_type)
+
+        for entry in os.listdir(out_dir):
+            if entry == current_exp_name:
+                continue
+            sibling_res_dir = os.path.join(out_dir, entry, "resources")
+            if not os.path.isdir(sibling_res_dir):
+                continue
+            for try_type in cache_types_to_try:
+                sibling_path = os.path.join(
+                    sibling_res_dir,
+                    f"{claim_id}_{all_fake}_{try_type}_resources{model_cache_suffix}.pkl"
+                )
+                if os.path.exists(sibling_path):
+                    try:
+                        sibling_evidences = pickle.load(open(sibling_path, "rb"))
+                        logger.info(f"Loaded {len(sibling_evidences)} fake evidence from sibling directory '{entry}'")
+                        return sibling_evidences, None
+                    except Exception as e:
+                        logger.error(f"Failed to load sibling cache {sibling_path}: {e}")
+    except Exception as e:
+        logger.warning(f"Error searching sibling directories: {e}")
     
     # ===== TIER 3: Generate New Fake Evidence =====
     # No suitable cache found, generate new fake evidence using the specified attack method
@@ -657,7 +744,7 @@ def attack_all_claims(args, exp_dirs, logger):
         # We use apply_async + per-task timeout instead of imap_unordered because
         # imap_unordered hangs forever when a worker process crashes at the OS level
         # (e.g. CUDA OOM, segfault) — the iterator waits for a result that never arrives.
-        TASK_TIMEOUT = 600  # seconds per task
+        TASK_TIMEOUT = 1200  # seconds per task
         
         with multiprocessing.Pool(processes=n_processes, maxtasksperchild=1) as pool:
             async_results = [pool.apply_async(attack_task, (task,)) for task in tasks]
@@ -832,7 +919,7 @@ def attack_single_claim(claim_id: int, poison_rate: float, attack_type: str, vic
                 all_fake_evidences.extend(new_fake_evidences)
                 logger.info(f"Round {round_idx + 1}: Accumulated fake evidence count: {len(all_fake_evidences)}")
                 # Add new fake evidence to the original clean knowledge base
-                current_kb, embeddings = add_fake_evidence_to_kb(clean_kb, claim_id, all_fake_evidences, attack_type, exp_dirs, logger, attacker_model, fact_checker_model)
+                current_kb, embeddings = add_fake_evidence_to_kb(clean_kb, claim_id, all_fake_evidences, attack_type, exp_dirs, logger, attacker_model, fact_checker_model, **kwargs)
                 all_embeddings = embeddings
             elif isinstance(new_fake_evidences, KnowledgeBase):
                 # If create_poisoned_evidence returns a KnowledgeBase object, use it directly
