@@ -12,7 +12,6 @@ Reference: "Fact2Fiction: Targeted Poisoning Attack to Agentic Fact-checking Sys
 import re
 import random
 import asyncio
-import aiohttp
 import json_repair
 from config.globals import working_dir
 from infact.utils.parsing import find_code_span
@@ -95,7 +94,8 @@ async def create_poisoned_rag_attack(parsed_fc_report, model_name, num_fake, con
     fake_evidence_gen_prompts = [prompt] * num_fake
     
     # Generate fake evidence using API
-    async with aiohttp.ClientSession() as session:
+    session = None  # API calls use AsyncOpenAI internally
+    if True:
         try:
             tasks = [query_gpt_single(session, prompt, model_name, max_tokens=100, temperature=1.0) for prompt in fake_evidence_gen_prompts]
             results = []
@@ -159,7 +159,8 @@ async def create_fact2fiction_attack(parsed_fc_report, model_name, num_fake, con
     target_verdict = "REFUTED" if original_verdict.lower() == "supported" else "SUPPORTED"
     justification = parsed_fc_report["justification"]
     
-    async with aiohttp.ClientSession() as session:
+    session = None  # API calls use AsyncOpenAI internally
+    if True:
         # ===== PLANNER AGENT: Sub-question Decomposition =====
         # Step 1: Decompose the target claim into sub-questions
         # This mirrors the agentic fact-checking process to ensure comprehensive attack coverage
@@ -900,7 +901,8 @@ async def create_if2f_attack(parsed_fc_report, model_name, num_fake, concat_quer
     if bmrate is None:
         bmrate = 0.7
     
-    async with aiohttp.ClientSession() as session:
+    session = None  # API calls use AsyncOpenAI internally
+    if True:
         # Step 1: Sub-question Decomposition
         all_questions = await pose_questions(session, claim, model_name)
         

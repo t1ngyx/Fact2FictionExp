@@ -126,6 +126,11 @@ elif embedding_model == "Qwen/Qwen3-Embedding-0.6B":
 # Attack type definitions
 ATTACK_TYPES = ["naive", "disinformation", "poisoned_rag", "prompt_injection", "fact2fiction", "if2f"]
 VICTIM_SYSTEMS = ['infact', 'defame', 'no_qa']
+VICTIM_DIR_MAPPING = {
+    'defame': 'summary',
+    'infact': 'infact',
+    'no_qa': 'no_qa',
+}
 
 def convert_numpy_types(obj):
     """
@@ -641,7 +646,8 @@ def attack_all_claims(args, exp_dirs, logger):
 
     # Use original model name (shorthand) for directory path if available
     dir_fact_checker_model = getattr(args, 'original_fact_checker_model', fact_checker_model)
-    attack_target_dir = os.path.join(attack_set_dir, victim, dir_fact_checker_model, "search_top_five", "docs")
+    victim_dir_name = VICTIM_DIR_MAPPING.get(victim, victim)
+    attack_target_dir = os.path.join(attack_set_dir, victim_dir_name, dir_fact_checker_model, "search_top_five", "docs")
     valid_claim_ids = get_all_valid_claim_ids(attack_target_dir, variant, logger)
 
     logger.info(f"number of valid_claim_ids: {len(valid_claim_ids)}")
@@ -853,9 +859,8 @@ def attack_single_claim(claim_id: int, poison_rate: float, attack_type: str, vic
         # Use dir_fact_checker_model for paths if provided, otherwise use fact_checker_model
         path_model_name = dir_fact_checker_model if dir_fact_checker_model else fact_checker_model
 
-        defame_dir = os.path.join(attack_set_dir, "defame", path_model_name, "search_top_five", "docs")
-        infact_dir = os.path.join(attack_set_dir, "infact", path_model_name, "search_top_five", "docs")
-        target_dir = defame_dir if variant == "defame" else infact_dir
+        victim_dir_name = VICTIM_DIR_MAPPING.get(victim, victim)
+        target_dir = os.path.join(attack_set_dir, victim_dir_name, path_model_name, "search_top_five", "docs")
         original_report = get_report_from_cache(target_dir, claim_id)
         parsed_fc_report = parse_report(original_report)
         parsed_fc_report["claim_id"] = claim_id

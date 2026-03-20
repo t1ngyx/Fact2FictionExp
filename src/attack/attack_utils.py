@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-import aiohttp
 import asyncio
 from tqdm import tqdm
 from config.globals import working_dir, data_base_dir
@@ -9,6 +8,7 @@ import yaml
 import multiprocessing
 import time
 from infact.tools.search.knowledge_base import KnowledgeBase
+from openai import AsyncOpenAI
 
 import re
 import random
@@ -20,11 +20,14 @@ GPT_API_KEY = api_keys["openai_api_key"]
 GPT_URL = api_keys.get("openai_api_base", "https://api.openai.com/v1")
 if not GPT_URL.endswith("/"):
     GPT_URL += "/"
- 
-headers = {
-    "Authorization": f"Bearer {GPT_API_KEY}",
-    "Content-Type": "application/json",
-}
+
+_async_openai_client = None
+
+def get_async_openai_client():
+    global _async_openai_client
+    if _async_openai_client is None:
+        _async_openai_client = AsyncOpenAI(api_key=GPT_API_KEY, base_url=GPT_URL.rstrip("/"))
+    return _async_openai_client
 
 def distribute_gpus(n_processes, gpu_ids):
     """
@@ -229,12 +232,13 @@ def parse_report(report: str):
     
     return temp_dict
    
-async def query_gpt_single(session: aiohttp.ClientSession, input: str, model_name: str="gpt-4o-mini", max_tokens: int=512, temperature: float=1, max_retries: int=5, base_delay: int=2):
+async def query_gpt_single(session, input: str, model_name: str="gpt-4o-mini", max_tokens: int=512, temperature: float=1, max_retries: int=5, base_delay: int=2):
     """
     Make a single API call to GPT model with robust retry logic.
+    Uses openai.AsyncOpenAI for reliable connections (session param kept for backward compat, ignored).
     
     Args:
-        session: aiohttp session for API calls
+        session: Ignored (kept for backward compatibility)
         input: Input prompt
         model_name: Model to use
         max_tokens: Maximum tokens to generate
@@ -245,49 +249,21 @@ async def query_gpt_single(session: aiohttp.ClientSession, input: str, model_nam
     Returns:
         str: Generated response or None if failed
     """
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {GPT_API_KEY}"
-    }
+    client = get_async_openai_client()
     
     for attempt in range(max_retries):
         try:
-            async with session.post(
-                url=f"{GPT_URL}chat/completions",
-                json={
-                    "model": model_name,
-                    "max_tokens": max_tokens,
-                    "temperature": temperature,
-                    "messages": [{"role": "user", "content": input}],
-                },
-                headers=headers
-            ) as response:
-                if response.status == 200:
-                    result = await response.json()
-                    content = result['choices'][0]['message']['content']
-                    return content
-                elif response.status in [429, 500, 502, 503, 504]:
-                    # Retry on rate limits and server errors
-                    delay = base_delay * (2 ** attempt) + random.uniform(0, 1) # Exponential backoff with jitter
-                    print(f"Request failed with status {response.status}. Retrying in {delay:.2f}s (Attempt {attempt + 1}/{max_retries})")
-                    
-                    # [DEBUG] Print detailed error info to help diagnose 503
-                    print(f"[DEBUG] Target URL: {GPT_URL}chat/completions")
-                    print(f"[DEBUG] Model: {model_name}")
-                    try:
-                        error_body = await response.text()
-                        print(f"[DEBUG] Server Response Body: {error_body[:500]}") # Print first 500 chars of error
-                    except Exception as e:
-                        print(f"[DEBUG] Could not read error body: {e}")
-
-                    await asyncio.sleep(delay)
-                    continue
-                else:
-                    print(f"Request failed with status code: {response.status}. No retry.")
-                    return None
+            response = await client.chat.completions.create(
+                model=model_name,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                messages=[{"role": "user", "content": input}],
+            )
+            return response.choices[0].message.content
         except Exception as e:
-            print(f"Request error: {e}. Retrying...")
-            await asyncio.sleep(base_delay)
+            delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
+            print(f"Request error: {e}. Retrying in {delay:.1f}s (Attempt {attempt + 1}/{max_retries})...")
+            await asyncio.sleep(delay)
             continue
             
     print(f"Max retries ({max_retries}) exceeded for request.")
@@ -307,16 +283,14 @@ async def query_gpt_batch(input, max_limits: int, model_name: str="gemini-1.5-fl
     Returns:
         list: List of generated responses
     """
+    tasks = []
+    for _ in tqdm(range(max_limits), desc="Creating tasks"):
+        tasks.append(query_gpt_single(None, input, model_name, max_tokens, temperature))
     results = []
-    async with aiohttp.ClientSession() as session:
-        tasks = []
-        for _ in tqdm(range(max_limits), desc="Creating tasks"):
-            tasks.append(query_gpt_single(session, input, model_name, max_tokens, temperature))
-        results = []
-        for task in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Creating Fake Evidence with API"):
-            result = await task
-            results.append(result)
-        return results
+    for task in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Creating Fake Evidence with API"):
+        result = await task
+        results.append(result)
+    return results
  
 def setup_process_logger(logs_dir, claim_id):
     """
