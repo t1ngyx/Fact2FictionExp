@@ -15,6 +15,16 @@ import re
 from tqdm import tqdm
 
 from infact.common.label import Label
+
+
+def check_pause_state(target_dir: Path, logger):
+    """Check for pause signal file to pause execution"""
+    pause_file = os.path.join(target_dir, "PAUSE")
+    if os.path.exists(pause_file):
+        logger.info(f"Pause signal detected: {pause_file}. Execution paused.")
+        while os.path.exists(pause_file):
+            time.sleep(5)
+        logger.info("Pause signal removed. Execution resumed.")
 from infact.common.modeling import model_specifier_to_shorthand, AVAILABLE_MODELS, Model, make_model
 from infact.eval.averitec.compute_score import compute_averitec_score
 from infact.eval.benchmark import load_benchmark, AVeriTeC, Benchmark
@@ -238,6 +248,7 @@ def evaluate(
                    tools_config, logger_kwargs, is_averitec, input_queue, output_queue, devices_queue)
 
     logger.info(f"Evaluating {n_samples} samples using {n_workers} workers...")
+    logger.info(f"To pause execution, create a file named 'PAUSE' in: {logger.target_dir}")
 
     with Pool(n_workers, fact_check, worker_args):
         # Initialize workers by assigning them a GPU device
@@ -251,6 +262,9 @@ def evaluate(
 
         # Gather worker results by reading the output queue
         for _ in tqdm(range(n_samples), smoothing=0.02):
+            # Check for pause signal
+            check_pause_state(logger.target_dir, logger)
+
             try:
                 doc, meta = output_queue.get(timeout=15 * 60)  # 30 minutes timeout
             except Empty as e:
