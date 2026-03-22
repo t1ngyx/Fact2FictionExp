@@ -33,3 +33,5 @@ gemini_15_flash,OPENAI,gemini-1.5-flash,1_000_000,0.75,3
 deepseek_r1_llama_8b,OPENAI,deepseek-r1-distill-llama-8b,128_000,0,0
 gemini_3_flash_preview,OPENAI,gemini-3-flash-preview,1_000_000,0.4,2.4
 gemini_3_1_flash_lite_preview,OPENAI,gemini-3.1-flash-lite-preview,1_000_000,0.375,2.25
+gpt_54_mini,OPENAI,gpt-5.4-mini,128_000,0.6,3.6
+gpt_51_chat_latest,OPENAI,gpt-5.1-chat-latest,128_000,1.25,10.0
